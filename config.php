@@ -1,20 +1,20 @@
 <?php
 
-$config = array(
-	'nickname' => 'beholder',
-	'username' => 'beholder',
-	'realname' => 'Beholder - IRC Channel Stats Aggregator',
-	'usermode' => 8,
-	'server_host' => '',
-	'server_port' => 6667,
-	'mysql' => array(
-		'host' => '',
-		'user' => '',
-		'pass' => '',
-		'dbname' => ''
-		),
-	'write_freq' => 60 // how often, in seconds, to write to the db
-	);
+$config = [
+    'nickname' => 'beholder',
+    'username' => 'beholder',
+    'realname' => 'Beholder - IRC Channel Stats Aggregator',
+    'usermode' => 8,
+    'server_host' => '',
+    'server_port' => 6667,
+    'mysql' => [
+        'host' => '',
+        'user' => '',
+        'pass' => '',
+        'dbname' => '',
+    ],
+    'write_freq' => 60, // how often, in seconds, to write to the db
+];
 
 define('EOL',"\n\r");
 define('VIOLENT_WORDS','smacks|beats|punches|hits|slaps');
