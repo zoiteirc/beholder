@@ -201,13 +201,11 @@ class Client extends Socket
 
     public function getNick()
     {
-
         return $this->nick;
     }
 
     public function setNick($nick)
     {
-
         if ($this->isConnected()) {
 
             //Change nick via NICK command
@@ -224,13 +222,11 @@ class Client extends Socket
 
     public function getName()
     {
-
         return $this->name;
     }
 
     public function setName($name)
     {
-
         if (!$this->isConnected()) {
 
             $this->name = $name;
@@ -248,13 +244,11 @@ class Client extends Socket
 
     public function getRealName()
     {
-
         return $this->realName;
     }
 
     public function setRealName($realName)
     {
-
         if (!$this->isConnected()) {
 
             $this->realName = $realName;
@@ -272,13 +266,11 @@ class Client extends Socket
 
     public function getServerPassword()
     {
-
         return $this->serverPassword;
     }
 
     public function setServerPassword($password)
     {
-
         if (!$this->isConnected()) {
 
             $this->serverPassword = $password;
@@ -289,25 +281,21 @@ class Client extends Socket
 
     public function getReconnectInterval()
     {
-
         return $this->reconnectInterval;
     }
 
     public function setReconnectInterval($interval)
     {
-
         $this->reconnectInterval = $interval;
     }
 
     public function getTickInterval()
     {
-
         return $this->tickInterval;
     }
 
     public function setTickInterval($interval)
     {
-
         $this->tickInterval = $interval;
 
         return $this;
@@ -315,7 +303,6 @@ class Client extends Socket
 
     public function enableReconnection()
     {
-
         $this->reconnect = true;
 
         return $this;
@@ -323,7 +310,6 @@ class Client extends Socket
 
     public function disableReconnection()
     {
-
         $this->reconnect = false;
 
         return $this;
@@ -331,7 +317,6 @@ class Client extends Socket
 
     public function enableRawMode()
     {
-
         $this->rawMode = true;
 
         return $this;
@@ -339,7 +324,6 @@ class Client extends Socket
 
     public function disableRawMode()
     {
-
         $this->rawMode = false;
 
         return $this;
@@ -347,7 +331,6 @@ class Client extends Socket
 
     public function getOption($option, $defaultValue = null)
     {
-
         $o = strtoupper($option);
 
         if (empty($this->options[$o])) {
@@ -363,13 +346,11 @@ class Client extends Socket
 
     public function getOptions()
     {
-
         return $this->options;
     }
 
     public function inOptionValues($option, $value)
     {
-
         $oValue = $this->getOption($option, []);
 
         return in_array($value, $oValue);
@@ -377,7 +358,6 @@ class Client extends Socket
 
     public function inOptionKeys($option, $value)
     {
-
         $oValue = $this->getOption($option, []);
 
         return in_array($value, array_keys($oValue));
@@ -385,19 +365,16 @@ class Client extends Socket
 
     public function isChannel($nick)
     {
-
         return $this->inOptionKeys('chantypes', $nick[0]);
     }
 
     public function isUser($nick)
     {
-
         return !$this->isChannel($nick);
     }
 
     public function connect($force = false)
     {
-
         if ($this->isConnected()) {
             //Already connected
             if ($force) {
@@ -449,14 +426,12 @@ class Client extends Socket
 
     public function reconnect()
     {
-
         return $this->disconnect()
             ->connect();
     }
 
     public function send($command)
     {
-
         $args = func_get_args();
         unset($args[0]);
         $args = array_values(array_filter($args, function ($arg) {
@@ -481,7 +456,6 @@ class Client extends Socket
 
     public function sendPrefixed($prefix, $command)
     {
-
         $args = func_get_args();
         unset($args[0]);
         unset($args[1]);
@@ -497,7 +471,6 @@ class Client extends Socket
 
     public function join($channel, $password = null)
     {
-
         $channelString = '';
         $passString = '';
 
@@ -510,7 +483,6 @@ class Client extends Socket
                 $channelString = implode(',', $channel);
             }
         } else {
-
             $channelString = $channel;
             if ($password) {
                 $passString = $password;
@@ -524,7 +496,6 @@ class Client extends Socket
 
     public function part($channel)
     {
-
         $channel = is_array($channel) ? implode(',', $channel) : $channel;
 
         $this->send(self::CMD_PART, $channel);
@@ -534,7 +505,6 @@ class Client extends Socket
 
     public function names($channel = null, $server = null)
     {
-
         $channel = is_array($channel) ? implode(',', $channel) : $channel;
 
         $this->send(self::CMD_NAMES, $channel, $server);
@@ -544,7 +514,6 @@ class Client extends Socket
 
     public function listChannels($channel = null, $server = null)
     {
-
         $channel = is_array($channel) ? implode(',', $channel) : $channel;
 
         $this->send(self::CMD_LIST, $channel, $server);
@@ -554,7 +523,6 @@ class Client extends Socket
 
     public function chat($channel, $message)
     {
-
         $this->sendPrefixed("$this->nick!$this->name", self::CMD_PRIVMSG, $channel, $message);
 
         return $this;
@@ -562,14 +530,12 @@ class Client extends Socket
 
     public function pm($nick, $message)
     {
-
         //actually just an alias.....
         return $this->chat($nick, $message);
     }
 
     public function nick($nick = null)
     {
-
         if (!$nick) {
             $nick = $this->nick;
         }
@@ -579,7 +545,6 @@ class Client extends Socket
 
     protected function handleMessage($e)
     {
-
         /* This one handles basic server responses so that the user
            can care about useful functionality instead.
 
