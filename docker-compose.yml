@@ -1,0 +1,21 @@
+version: "3"
+services:
+  app:
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: Dockerfile-app
+    volumes:
+      - ./:/usr/src/app
+  db:
+    ports:
+      - "3306:3306"
+    image: mariadb:10.4
+    environment:
+      - MYSQL_DATABASE=app
+      - MYSQL_USER=appuser
+      - MYSQL_PASSWORD=appsecret
+      - MYSQL_ROOT_PASSWORD=rootsecret
+#    volumes:
+#      - ./schema:/docker-entrypoint-initdb.d

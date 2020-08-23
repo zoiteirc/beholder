@@ -1,0 +1,14 @@
+FROM php:7.4-cli
+
+RUN set -eux; apt-get update; apt-get install -y unzip; rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# https://github.com/mlocati/docker-php-extension-installer
+ADD https://raw.githubusercontent.com/mlocati/docker-php-extension-installer/master/install-php-extensions /usr/local/bin/
+RUN chmod uga+x /usr/local/bin/install-php-extensions && sync && \
+    install-php-extensions mysqli pdo_mysql zip xdebug redis
+
+WORKDIR /usr/src/app
+
+CMD [ "php", "./beholder.php" ]
