@@ -37,7 +37,7 @@ class MySQL implements PersistenceInterface
             }
 
             while ($row = $result->fetch_assoc()) {
-                $this->channelsCache[(int)$row['id']] = $row['channel'];
+                $this->channelsCache[(int)$row['id']] = strtolower($row['channel']);
             }
         });
     }
@@ -49,6 +49,8 @@ class MySQL implements PersistenceInterface
 
     public function getChannelId($channel) : int
     {
+        $channel = strtolower($channel);
+
         $result = array_search($channel, $this->channelsCache);
 
         if ($result === false) {
