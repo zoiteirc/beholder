@@ -60,6 +60,11 @@ class MySQL implements PersistenceInterface
         return (int) $result;
     }
 
+    protected function normalizeNick($nick) : string
+    {
+        return strtolower($nick);
+    }
+
     public function persist(
         StatTotals $lineStatsBuffer,
         TextStatsBuffer $textStatsBuffer,
@@ -85,7 +90,7 @@ class MySQL implements PersistenceInterface
                                 INSERT INTO `line_counts`
                                 SET `type` = "{$db->escape_string($type)}",
                                     `channel_id` = "{$this->getChannelId($chan)}",
-                                    `nick` = "{$db->escape_string($nick)}",
+                                    `nick` = "{$db->escape_string($this->normalizeNick($nick))}",
                                     `total` = "{$db->escape_string($quantity)}"
                                 ON DUPLICATE KEY UPDATE
                                     `total` = `total` + "{$db->escape_string($quantity)}";
@@ -99,7 +104,7 @@ class MySQL implements PersistenceInterface
                         $sql[] = <<< EOD
                             INSERT INTO `textstats`
                             SET `channel_id` = "{$this->getChannelId($chan)}",
-                                `nick` = "{$db->escape_string($nick)}",
+                                `nick` = "{$db->escape_string($this->normalizeNick($nick))}",
                                 `messages` = "{$db->escape_string($totals['messages'])}",
                                 `words` = "{$db->escape_string($totals['words'])}",
                                 `chars` = "{$db->escape_string($totals['chars'])}",
@@ -121,7 +126,7 @@ class MySQL implements PersistenceInterface
                             $sql[] = <<< EOD
                                 INSERT INTO `active_times`
                                 SET `channel_id` = "{$this->getChannelId($chan)}",
-                                    `nick` = "{$db->escape_string($nick)}",
+                                    `nick` = "{$db->escape_string($this->normalizeNick($nick))}",
                                     `hour` = "{$db->escape_string($hour)}",
                                     `total` = "{$db->escape_string($quantity)}"
                                 ON DUPLICATE KEY UPDATE
@@ -136,7 +141,7 @@ class MySQL implements PersistenceInterface
                         $sql[] = <<< EOD
                             INSERT INTO `latest_quote`
                                 SET `channel_id` = "{$this->getChannelId($chan)}",
-                                    `nick` = "{$db->escape_string($nick)}",
+                                    `nick` = "{$db->escape_string($this->normalizeNick($nick))}",
                                     `quote` = "{$db->escape_string($quote)}"
                                 ON DUPLICATE KEY UPDATE
                                     `quote` = "{$db->escape_string($quote)}";
