@@ -12,6 +12,8 @@ use App\Stats\TextStatsBuffer;
 
 class Bot extends Client
 {
+    protected string $desiredNick;
+
     protected StatTotals $lineStatsBuffer;
     protected TextStatsBuffer $textStatsBuffer;
     protected ActiveTimeTotals $activeTimesBuffer;
@@ -34,6 +36,8 @@ class Bot extends Client
     {
         parent::__construct($config['nick'], $config['host'], $config['port']);
 
+        $this->desiredNick = $config['nick'];
+
         $this->persistence = $persistence;
 
         $this->initializeChannelsList();
@@ -52,7 +56,16 @@ class Bot extends Client
         $this->reconnectInterval = 10;
         $this->on('disconnected', function () { echo 'Disconnected.' . "\n"; });
 
+        $this->on('message:' . self::ERR_NICKNAMEINUSE, function ($event) {
+            $this->nick .= '_';
+            $this->nick();
+        });
+
         $this->on('welcome', function () {
+            if ($this->nick != $this->desiredNick) {
+                // TODO: Given NickServ account details, ghost the old nick and assume it
+            }
+
             foreach ($this->channels as $channel) {
                 $this->join($channel);
             }
