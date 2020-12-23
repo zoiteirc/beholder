@@ -230,6 +230,10 @@ class Bot extends Client
 
     protected function isIgnoredNick($nick)
     {
+        if (in_array($nick, [$this->nick, $this->desiredNick])) {
+            return true;
+        }
+
         return in_array($nick, $this->ignoreNicks);
     }
 
