@@ -2,6 +2,7 @@
 
 namespace App\Client;
 
+use App\Configuration;
 use App\Persistence\PersistenceInterface;
 use App\Stats\ActiveTimeTotals;
 use App\Stats\MonologueMonitor;
@@ -12,7 +13,7 @@ use App\Stats\TextStatsBuffer;
 
 class Bot extends Client
 {
-    protected string $desiredNick;
+    protected Configuration $config;
 
     protected StatTotals $lineStatsBuffer;
     protected TextStatsBuffer $textStatsBuffer;
@@ -26,23 +27,24 @@ class Bot extends Client
 
     protected $lastWriteAt = INF * -1;
 
-    protected $writeInterval;
-
     protected $channels = [];
 
     protected PersistenceInterface $persistence;
 
-    public function __construct($config, PersistenceInterface $persistence)
+    public function __construct(Configuration $config, PersistenceInterface $persistence)
     {
-        parent::__construct($config['nick'], $config['host'], $config['port']);
+        parent::__construct(
+            $config->getDesiredNick(),
+            $config->getHost(),
+            $config->getPort(),
+        );
 
         $this->persistence = $persistence;
 
-        $this->desiredNick = $config['nick'];
-        $this->name = $config['username'];
-        $this->realName = $config['realname'];
+        $this->config = $config;
 
-        $this->writeInterval = $config['write_freq'];
+        $this->setName($config->getUsername());
+        $this->setRealName($config->getRealName());
 
         $this->ignoreNicks = [];
 
@@ -54,7 +56,7 @@ class Bot extends Client
 
         $this->registerConnectionHandlingListeners();
 
-        if ($config['debug_mode']) {
+        if ($config->isDebugMode()) {
             $this->registerDebugListener();
         }
 
@@ -85,7 +87,7 @@ class Bot extends Client
         });
 
         $this->on('welcome', function () {
-            if ($this->nick != $this->desiredNick) {
+            if ($this->nick != $this->config->getDesiredNick()) {
                 // TODO: Given NickServ account details, ghost the old nick and assume it
             }
 
@@ -168,7 +170,7 @@ class Bot extends Client
 
     protected function writeToDatabase()
     {
-        if (time() - $this->lastWriteAt < $this->writeInterval) {
+        if (time() - $this->lastWriteAt < $this->config->getWriteFrequencySeconds()) {
             return;
         }
 

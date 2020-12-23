@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Client\Bot;
+use App\Configuration;
 use App\Persistence\MySQL;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Command\LockableTrait;
@@ -23,18 +24,20 @@ class RunBot extends Command
         }
 
         $bot = new Bot(
-            [
-                'nick' => $_ENV['BOT_NICK'] ?? 'beholder',
-                'username' => $_ENV['BOT_USERNAME'] ?? 'beholder',
-                'realname' => $_ENV['BOT_REALNAME'] ?? 'Beholder - IRC Channel Stats Aggregator',
+            new Configuration(
+                $_ENV['BOT_NICK'] ?? 'beholder',
+                $_ENV['BOT_USERNAME'] ?? 'beholder',
+                $_ENV['BOT_REALNAME'] ?? 'Beholder - IRC Channel Stats Aggregator',
 
-                'host' => $_ENV['SERVER_HOSTNAME'] ?? 'irc.zoite.net',
-                'port' => $_ENV['SERVER_PORT'] ?? 6667,
+                $_ENV['SERVER_HOSTNAME'] ?? 'irc.zoite.net',
+                $_ENV['SERVER_PORT'] ?? 6667,
 
-                'write_freq' => $_ENV['WRITE_FREQUENCY'] ?? 60,
+                $_ENV['NICKSERV_ACCOUNT'] ?? null,
+                $_ENV['NICKSERV_PASSWORD'] ?? null,
 
-                'debug_mode' => (bool) $_ENV['DEBUG'],
-            ],
+                $_ENV['WRITE_FREQUENCY'] ?? 60,
+                (bool) $_ENV['DEBUG'] ?? false,
+            ),
             new MySQL([
                 'hostname' => $_ENV['DB_HOST'] ?? 'localhost',
                 'username' => $_ENV['DB_USER'] ?? 'root',
