@@ -31,6 +31,7 @@ class RunBot extends Command
 
                 $_ENV['SERVER_HOSTNAME'] ?? 'irc.zoite.net',
                 $_ENV['SERVER_PORT'] ?? 6667,
+                $_ENV['USE_TLS'] ?? false,
 
                 $_ENV['NICKSERV_ACCOUNT'] ?? null,
                 $_ENV['NICKSERV_PASSWORD'] ?? null,

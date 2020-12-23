@@ -10,6 +10,7 @@ class Configuration
 
     private string $host;
     private int $port;
+    private bool $useTls;
 
     private ?string $nickServAccountName;
     private ?string $nickServPassword;
@@ -24,6 +25,7 @@ class Configuration
 
         string $host,
         int $port,
+        bool $useTls,
 
         string $nickServAccountName = null,
         string $nickServPassword = null,
@@ -39,6 +41,7 @@ class Configuration
 
         $this->host = $host;
         $this->port = $port;
+        $this->useTls = $useTls;
 
         $this->nickServAccountName = $nickServAccountName;
         $this->nickServPassword = $nickServPassword;
@@ -71,6 +74,11 @@ class Configuration
     public function getPort(): int
     {
         return $this->port;
+    }
+
+    public function useTls(): bool
+    {
+        return $this->useTls;
     }
 
     public function getNickServAccountName(): ?string

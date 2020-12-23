@@ -35,7 +35,7 @@ class Bot extends Client
     {
         parent::__construct(
             $config->getDesiredNick(),
-            $config->getHost(),
+            ($config->useTls() ? 'tls://' : '') . $config->getHost(),
             $config->getPort(),
         );
 
