@@ -86,11 +86,32 @@ class Bot extends Client
             $this->nick();
         });
 
-        $this->on('welcome', function () {
-            if ($this->nick != $this->config->getDesiredNick()) {
-                // TODO: Given NickServ account details, ghost the old nick and assume it
+        // Identify if challenged
+        $this->on('notice:' . $this->getNick() . ':NickServ,pm:' . $this->getNick() . ':NickServ', function ($event) {
+            if (!$this->config->hasNickServAccount()) {
+                echo 'WARNING: Challenged to identify with NickServ, but no NickServ account details configured. Is this nick already taken?';
+                return;
             }
 
+            if (
+                false !== strpos(strtolower($event->text), 'is registered')
+                && false !== strpos(strtolower($event->text), 'identify via')
+            ) {
+                $this->pm('NickServ', 'IDENTIFY ' . $this->config->getNickServAccountName() . ' ' . $this->config->getNickServPassword());
+            }
+        });
+
+        $this->on('welcome', function () {
+            // Get our nick, if we can
+            if ($this->config->hasNickServAccount()) {
+                if ($this->nick != $this->config->getDesiredNick()) {
+                    $this->pm('NickServ', 'GHOST ' . $this->config->getNickServAccountName() . ' ' . $this->config->getNickServPassword());
+                    $this->pm('NickServ', 'RELEASE ' . $this->config->getNickServAccountName() . ' ' . $this->config->getNickServPassword());
+                    $this->nick($this->config->getDesiredNick());
+                }
+            }
+
+            // Join channels
             foreach ($this->channels as $channel) {
                 $this->join($channel);
             }

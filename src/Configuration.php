@@ -81,6 +81,11 @@ class Configuration
         return $this->useTls;
     }
 
+    public function hasNickServAccount(): bool
+    {
+        return !is_null($this->getNickServPassword());
+    }
+
     public function getNickServAccountName(): ?string
     {
         return $this->nickServAccountName;
