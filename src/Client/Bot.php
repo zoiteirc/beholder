@@ -36,24 +36,47 @@ class Bot extends Client
     {
         parent::__construct($config['nick'], $config['host'], $config['port']);
 
-        $this->desiredNick = $config['nick'];
-
         $this->persistence = $persistence;
+
+        $this->desiredNick = $config['nick'];
+        $this->name = $config['username'];
+        $this->realName = $config['realname'];
+
+        $this->writeInterval = $config['write_freq'];
+
+        $this->ignoreNicks = [];
+
+        $this->reconnectInterval = 10;
 
         $this->initializeChannelsList();
 
         $this->initializeBuffers();
 
-        $this->writeInterval = $config['write_freq'];
+        $this->registerConnectionHandlingListeners();
 
-        $this->ignoreNicks = [
-            $config['nick'],
-        ];
+        if ($config['debug_mode']) {
+            $this->registerDebugListener();
+        }
 
-        $this->name = $config['username'];
-        $this->realName = $config['realname'];
+        $this->registerStatsListeners();
+    }
 
-        $this->reconnectInterval = 10;
+    protected function initializeChannelsList()
+    {
+        $this->channels = $this->persistence->getChannels();
+    }
+
+    protected function initializeBuffers()
+    {
+        $this->lineStatsBuffer = new StatTotals();
+        $this->textStatsBuffer = new TextStatsBuffer();
+        $this->activeTimesBuffer = new ActiveTimeTotals();
+        $this->latestQuotesBuffer = new QuoteBuffer();
+        $this->monologueMonitor = new MonologueMonitor();
+    }
+
+    protected function registerConnectionHandlingListeners()
+    {
         $this->on('disconnected', function () { echo 'Disconnected.' . "\n"; });
 
         $this->on('message:' . self::ERR_NICKNAMEINUSE, function ($event) {
@@ -70,13 +93,17 @@ class Bot extends Client
                 $this->join($channel);
             }
         });
+    }
 
-        if ($config['debug_mode']) {
-            $this->on('message', function ($event) {
-                echo $event->raw . "\n";
-            });
-        }
+    protected function registerDebugListener()
+    {
+        $this->on('message', function ($event) {
+            echo $event->raw . "\n";
+        });
+    }
 
+    protected function registerStatsListeners()
+    {
         $this->on('tick', function () {
             $this->writeToDatabase();
         });
@@ -129,28 +156,14 @@ class Bot extends Client
                         $channel,
                         $nick,
                         (
-                            $polarity === '+'
-                                ? StatsTotalsInterface::TYPE_DONATED_OPS
-                                : StatsTotalsInterface::TYPE_REVOKED_OPS
+                        $polarity === '+'
+                            ? StatsTotalsInterface::TYPE_DONATED_OPS
+                            : StatsTotalsInterface::TYPE_REVOKED_OPS
                         )
                     );
                 }
             }
         });
-    }
-
-    protected function initializeChannelsList()
-    {
-        $this->channels = $this->persistence->getChannels();
-    }
-
-    protected function initializeBuffers()
-    {
-        $this->lineStatsBuffer = new StatTotals();
-        $this->textStatsBuffer = new TextStatsBuffer();
-        $this->activeTimesBuffer = new ActiveTimeTotals();
-        $this->latestQuotesBuffer = new QuoteBuffer();
-        $this->monologueMonitor = new MonologueMonitor();
     }
 
     protected function writeToDatabase()
