@@ -712,7 +712,9 @@ class Client extends Socket
             case self::RPL_ISUPPORT:
 
                 $args = $message->args;
-                unset($args[0], $args[count($args) - 1]);
+
+                array_shift($args); // Remove bot's own nick
+                array_pop($args); // Remove "are supported by this server"
 
                 foreach ($args as $arg) {
 
