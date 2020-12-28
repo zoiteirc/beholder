@@ -718,7 +718,12 @@ class Client extends Socket
 
                 foreach ($args as $arg) {
 
-                    list($key, $val) = explode('=', $arg);
+                    if (false === strpos($arg, '=')) {
+                        $key = $arg;
+                        $val = null;
+                    } else {
+                        list($key, $val) = explode('=', $arg);
+                    }
 
                     //handle some keys specifically
                     switch (strtolower($key)) {
