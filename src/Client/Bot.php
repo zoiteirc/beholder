@@ -362,6 +362,10 @@ class Bot extends Client
 
     protected function isBotWatchingChannel($channel): bool
     {
+        if (!$this->isChannel($channel)) {
+            return false;
+        }
+
         $normalizedChannels = array_map('strtolower', $this->channels);
         $normalizedChannel = strtolower($channel);
         return in_array($normalizedChannel, $normalizedChannels);
