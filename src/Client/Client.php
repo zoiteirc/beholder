@@ -365,7 +365,7 @@ class Client extends Socket
 
     public function isChannel($nick)
     {
-        return $this->inOptionKeys('chantypes', $nick[0]);
+        return $this->inOptionValues('chantypes', $nick[0]);
     }
 
     public function isUser($nick)
