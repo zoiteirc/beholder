@@ -135,6 +135,10 @@ class Bot extends Client
         });
 
         $this->on('chat', function ($event) {
+            if (!$this->isBotWatchingChannel($event->channel)) {
+                return;
+            }
+
             $nick = $event->from;
             $channel = $event->channel;
             $message = $event->text;
@@ -354,5 +358,12 @@ class Bot extends Client
             $this->config->getBotAdminNick(),
             $message,
         );
+    }
+
+    protected function isBotWatchingChannel($channel): bool
+    {
+        $normalizedChannels = array_map('strtolower', $this->channels);
+        $normalizedChannel = strtolower($channel);
+        return in_array($normalizedChannel, $normalizedChannels);
     }
 }
