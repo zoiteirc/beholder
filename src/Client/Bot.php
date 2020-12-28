@@ -89,7 +89,9 @@ class Bot extends Client
         // Identify if challenged
         $this->on('notice:' . $this->getNick() . ':NickServ,pm:' . $this->getNick() . ':NickServ', function ($event) {
             if (!$this->config->hasNickServAccount()) {
-                echo 'WARNING: Challenged to identify with NickServ, but no NickServ account details configured. Is this nick already taken?';
+                $this->pmBotAdmin(
+                    'WARNING: Challenged to identify with NickServ, but no NickServ account details configured. Is this nick already taken?'
+                );
                 return;
             }
 
@@ -312,5 +314,19 @@ class Bot extends Client
     protected function isFrown($message)
     {
         return preg_match('#[:;=8X]{1}[ ^o-]{0,1}[\(\[\\/\{]{1}#', $message);
+    }
+
+    protected function pmBotAdmin($message)
+    {
+        echo $message;
+
+        if (!$this->config->hasBotAdmin()) {
+            return;
+        }
+
+        $this->pm(
+            $this->config->getBotAdminNick(),
+            $message,
+        );
     }
 }

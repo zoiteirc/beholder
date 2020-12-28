@@ -15,6 +15,8 @@ class Configuration
     private ?string $nickServAccountName;
     private ?string $nickServPassword;
 
+    private ?string $botAdminNick;
+
     private int $writeFrequencySeconds;
     private bool $debugMode;
 
@@ -29,6 +31,8 @@ class Configuration
 
         string $nickServAccountName = null,
         string $nickServPassword = null,
+
+        string $botAdminNick = null,
 
         int $writeFrequencySeconds = 60,
 
@@ -45,6 +49,8 @@ class Configuration
 
         $this->nickServAccountName = $nickServAccountName;
         $this->nickServPassword = $nickServPassword;
+
+        $this->botAdminNick = $botAdminNick;
 
         $this->writeFrequencySeconds = $writeFrequencySeconds;
 
@@ -94,6 +100,16 @@ class Configuration
     public function getNickServPassword(): ?string
     {
         return $this->nickServPassword;
+    }
+
+    public function hasBotAdmin(): bool
+    {
+        return !is_null($this->botAdminNick);
+    }
+
+    public function getBotAdminNick(): ?string
+    {
+        return $this->botAdminNick;
     }
 
     public function getWriteFrequencySeconds(): int

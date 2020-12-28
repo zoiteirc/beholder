@@ -36,6 +36,8 @@ class RunBot extends Command
                 $_ENV['NICKSERV_ACCOUNT'] ?? null,
                 $_ENV['NICKSERV_PASSWORD'] ?? null,
 
+                $_ENV['BOT_ADMIN_NICK'] ?? null,
+
                 $_ENV['WRITE_FREQUENCY'] ?? 60,
                 (bool) $_ENV['DEBUG'] ?? false,
             ),
