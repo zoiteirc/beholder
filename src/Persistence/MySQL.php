@@ -30,7 +30,7 @@ class MySQL implements PersistenceInterface
         $this->withDatabaseConnection(function (\mysqli $db) {
             $this->checkSchema($db);
 
-            $result = $db->query('SELECT `id`, `channel` FROM `channels`');
+            $result = $this->query($db, 'SELECT `id`, `channel` FROM `channels`');
 
             if (!$result) {
                 throw new \Exception($db->error);
@@ -163,7 +163,7 @@ class MySQL implements PersistenceInterface
                     $db,
                     function (\mysqli $db) use ($sql) {
                         foreach ($sql as $q) {
-                            if (!$db->query($q)) {
+                            if (!$this->query($db, $q)) {
                                 throw new \Exception($db->error);
                             }
                         }
@@ -235,7 +235,7 @@ class MySQL implements PersistenceInterface
 
     protected function checkSchema(\mysqli $db)
     {
-        $result = $db->query('SHOW TABLES LIKE "beholder_config"');
+        $result = $this->query($db, 'SHOW TABLES LIKE "beholder_config"');
 
         if (!$result) {
             throw new \Exception($db->error);
@@ -250,7 +250,7 @@ class MySQL implements PersistenceInterface
             return;
         }
 
-        $result = $db->query('SELECT `schema_version` FROM `beholder_config` LIMIT 1');
+        $result = $this->query($db, 'SELECT `schema_version` FROM `beholder_config` LIMIT 1');
 
         if (!$result) {
             throw new \Exception($db->error);
@@ -266,13 +266,14 @@ class MySQL implements PersistenceInterface
     protected function initializeSchema(\mysqli $db)
     {
         foreach ($this->getSchema() as $dql) {
-            if (!$db->query($dql)) {
+            if (!$this->query($db, $dql)) {
                 throw new \Exception($db->error);
             }
         }
 
         if (
-            !$db->query(
+            !$this->query(
+                $db,
                 <<< EOD
                 CREATE TABLE `beholder_config` (
                   `schema_version` int(11) DEFAULT NULL,
@@ -285,7 +286,8 @@ class MySQL implements PersistenceInterface
         }
 
         if (
-            !$db->query(
+            !$this->query(
+                $db,
                 'INSERT INTO `beholder_config` SET `schema_version` = 1, `reporting_time` = NULL'
             )
         ) {
@@ -352,5 +354,13 @@ class MySQL implements PersistenceInterface
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             EOD,
         ];
+    }
+
+    protected function query(\mysqli $db, $query)
+    {
+        if (isset($_ENV['MYSQL_DEBUG']) && $_ENV['MYSQL_DEBUG']) {
+            echo $query . "\n\r";
+        }
+        return $db->query($query);
     }
 }
