@@ -3,6 +3,7 @@
 namespace App\Client;
 
 use App\Configuration;
+use App\Persistence\Exceptions\PersistenceException;
 use App\Persistence\PersistenceInterface;
 use App\Stats\ActiveTimeTotals;
 use App\Stats\MonologueMonitor;
@@ -199,14 +200,28 @@ class Bot extends Client
 
         echo 'Writing to database...' . "\n";
 
-        if (
-        $this->persistence->persist(
-            $this->lineStatsBuffer,
-            $this->textStatsBuffer,
-            $this->activeTimesBuffer,
-            $this->latestQuotesBuffer,
-        )
-        ) {
+        try {
+            $persistOperation = $this->persistence->persist(
+                $this->lineStatsBuffer,
+                $this->textStatsBuffer,
+                $this->activeTimesBuffer,
+                $this->latestQuotesBuffer,
+            );
+        } catch (PersistenceException $exception) {
+            $this->pmBotAdmin(
+                implode(
+                    ' ',
+                    [
+                        'Error encountered while persisting data.',
+                        'Code: ' . $exception->getCode(),
+                        'Message: ' . $exception->getMessage(),
+                    ],
+                )
+            );
+            return;
+        }
+
+        if ($persistOperation) {
             $this->textStatsBuffer->reset();
             $this->lineStatsBuffer->reset();
             $this->activeTimesBuffer->reset();
@@ -331,6 +346,9 @@ class Bot extends Client
         if (!$this->config->hasBotAdmin()) {
             return;
         }
+
+        // Remove new lines and carriage returns
+        $message = str_replace(["\r", "\n"], ' ', $message);
 
         $this->pm(
             $this->config->getBotAdminNick(),

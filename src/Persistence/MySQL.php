@@ -2,6 +2,7 @@
 
 namespace App\Persistence;
 
+use App\Persistence\Exceptions\PersistenceException;
 use App\Stats\ActiveTimeTotals;
 use App\Stats\QuoteBuffer;
 use App\Stats\StatTotals;
@@ -33,7 +34,7 @@ class MySQL implements PersistenceInterface
             $result = $this->query($db, 'SELECT `id`, `channel` FROM `channels`');
 
             if (!$result) {
-                throw new \Exception($db->error);
+                throw new PersistenceException($db->error, $db->errno);
             }
 
             while ($row = $result->fetch_assoc()) {
@@ -54,7 +55,7 @@ class MySQL implements PersistenceInterface
         $result = array_search($channel, $this->channelsCache);
 
         if ($result === false) {
-            throw new \Exception('No such channel');
+            throw new PersistenceException('No such channel');
         }
 
         return (int) $result;
@@ -164,7 +165,7 @@ class MySQL implements PersistenceInterface
                     function (\mysqli $db) use ($sql) {
                         foreach ($sql as $q) {
                             if (!$this->query($db, $q)) {
-                                throw new \Exception($db->error);
+                                throw new PersistenceException($db->error, $db->errno);
                             }
                         }
                     }
@@ -207,7 +208,7 @@ class MySQL implements PersistenceInterface
         } while ($db->connect_error && $attempt++ && $attempt < $maxAttempts);
 
         if ($db->connect_error) {
-            throw new \Exception($db->connect_error);
+            throw new PersistenceException($db->connect_error, $db->connect_errno);
         }
 
         $db->set_charset('utf8mb4');
@@ -238,7 +239,7 @@ class MySQL implements PersistenceInterface
         $result = $this->query($db, 'SHOW TABLES LIKE "beholder_config"');
 
         if (!$result) {
-            throw new \Exception($db->error);
+            throw new PersistenceException($db->error, $db->errno);
         }
 
         $isTableMissing = $result->num_rows === 0;
@@ -253,13 +254,17 @@ class MySQL implements PersistenceInterface
         $result = $this->query($db, 'SELECT `schema_version` FROM `beholder_config` LIMIT 1');
 
         if (!$result) {
-            throw new \Exception($db->error);
+            throw new PersistenceException($db->error, $db->errno);
         }
 
         $result = $result->fetch_assoc();
 
         if ($result['schema_version'] != $this->dbSchemaVersion) {
-            throw new \Exception();
+            $expected = $this->dbSchemaVersion;
+            $actual = $result['schema_version'];
+            throw new PersistenceException(
+                'Database schema version mismatch (' . $actual . ' in use, ' . $expected . ' expected'
+            );
         }
     }
 
@@ -267,7 +272,7 @@ class MySQL implements PersistenceInterface
     {
         foreach ($this->getSchema() as $dql) {
             if (!$this->query($db, $dql)) {
-                throw new \Exception($db->error);
+                throw new PersistenceException($db->error, $db->errno);
             }
         }
 
@@ -282,7 +287,7 @@ class MySQL implements PersistenceInterface
                 EOD
             )
         ) {
-            throw new \Exception($db->error);
+            throw new PersistenceException($db->error, $db->errno);
         }
 
         if (
@@ -291,7 +296,7 @@ class MySQL implements PersistenceInterface
                 'INSERT INTO `beholder_config` SET `schema_version` = 1, `reporting_time` = NULL'
             )
         ) {
-            throw new \Exception($db->error);
+            throw new PersistenceException($db->error, $db->errno);
         }
     }
 
