@@ -17,7 +17,7 @@ class MySQL implements PersistenceInterface
 
     protected int $dbSchemaVersion = 1;
 
-    protected array $channelsCache;
+    protected ?array $channelsCache = null;
 
     public function __construct(array $options)
     {
@@ -30,6 +30,22 @@ class MySQL implements PersistenceInterface
 
         $this->withDatabaseConnection(function (\mysqli $db) {
             $this->checkSchema($db);
+        });
+    }
+
+    public function getChannels() : array
+    {
+        if (is_null($this->channelsCache)) {
+            $this->channelsCache = $this->fetchChannelsFromDatabase();
+        }
+
+        return $this->channelsCache;
+    }
+
+    protected function fetchChannelsFromDatabase()
+    {
+        return $this->withDatabaseConnection(function (\mysqli $db) {
+            $channels = [];
 
             $result = $this->query($db, 'SELECT `id`, `channel` FROM `channels`');
 
@@ -38,21 +54,18 @@ class MySQL implements PersistenceInterface
             }
 
             while ($row = $result->fetch_assoc()) {
-                $this->channelsCache[(int)$row['id']] = strtolower($row['channel']);
+                $channels[(int)$row['id']] = strtolower($row['channel']);
             }
-        });
-    }
 
-    public function getChannels() : array
-    {
-        return $this->channelsCache;
+            return $channels;
+        });
     }
 
     public function getChannelId($channel) : int
     {
         $channel = strtolower($channel);
 
-        $result = array_search($channel, $this->channelsCache);
+        $result = array_search($channel, $this->getChannels());
 
         if ($result === false) {
             throw new PersistenceException('No such channel');
@@ -61,16 +74,62 @@ class MySQL implements PersistenceInterface
         return (int) $result;
     }
 
+    public function hasChannel($channel): bool
+    {
+        $channel = strtolower($channel);
+
+        return in_array($channel, $this->getChannels());
+    }
+
     protected function normalizeNick($nick) : string
     {
         return strtolower($nick);
+    }
+
+    protected function synchronizeChannelList(\mysqli $db, array $channelList)
+    {
+        $sql = [];
+
+        $normalizedChannelList = array_map('strtolower', $channelList);
+        foreach ($this->getChannels() as $cachedChannelId => $cachedChannelName) {
+            if (!in_array($cachedChannelName, $normalizedChannelList)) {
+                // This channel has been removed since we last persisted
+                $id = $db->escape_string($cachedChannelId);
+
+                $sql[] = 'DELETE FROM `line_counts` WHERE `id` = "' . $id . '"';
+                $sql[] = 'DELETE FROM `active_times` WHERE `id` = "' . $id . '"';
+                $sql[] = 'DELETE FROM `latest_quote` WHERE `id` = "' . $id . '"';
+                $sql[] = 'DELETE FROM `textstats` WHERE `id` = "' . $id . '"';
+                $sql[] = 'DELETE FROM `channels` WHERE `id` = "' . $id . '"';
+                // TODO: Allow channels to be marked as inactive, and keep their data
+            }
+        }
+
+        foreach ($channelList as $channel) {
+            if (!$this->hasChannel($channel)) {
+                // This channel has been added since we last persisted
+                $sql[] = <<< EOD
+                    INSERT INTO `channels`
+                    SET `channel` = "{$db->escape_string($channel)}";
+                    EOD;
+            }
+        }
+
+        foreach ($sql as $q) {
+            $this->query($db, $q);
+        }
+
+        if (count($sql) > 0) {
+            $this->channelsCache = null;
+        }
     }
 
     public function persist(
         StatTotals $lineStatsBuffer,
         TextStatsBuffer $textStatsBuffer,
         ActiveTimeTotals $activeTimesBuffer,
-        QuoteBuffer $latestQuotesBuffer
+        QuoteBuffer $latestQuotesBuffer,
+        array $channelList
     ) : bool
     {
         $this->withDatabaseConnection(
@@ -79,10 +138,12 @@ class MySQL implements PersistenceInterface
                 $lineStatsBuffer,
                 $textStatsBuffer,
                 $activeTimesBuffer,
-                $latestQuotesBuffer
+                $latestQuotesBuffer,
+                $channelList
             ) {
-
                 $sql = [];
+
+                $this->synchronizeChannelList($db, $channelList);
 
                 foreach ($lineStatsBuffer->getData() as $type => $channels) {
                     foreach ($channels as $chan => $nicks) {
@@ -182,9 +243,11 @@ class MySQL implements PersistenceInterface
     {
         $db = $this->connect();
 
-        $fn($db);
+        $result = $fn($db);
 
         $this->disconnect($db);
+
+        return $result;
     }
 
     protected function connect() : \mysqli
@@ -327,10 +390,6 @@ class MySQL implements PersistenceInterface
               `channel` varchar(255) UNIQUE NOT NULL DEFAULT '',
               PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-            EOD,
-            // TODO: Remove this, manage channels dynamically.
-            <<< EOD
-            INSERT INTO `channels` SET `channel` = '#antisocial';
             EOD,
             <<< EOD
             CREATE TABLE `ignore_nick` (

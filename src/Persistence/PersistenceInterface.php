@@ -15,7 +15,8 @@ interface PersistenceInterface
         StatTotals $lineStatsBuffer,
         TextStatsBuffer $textStatsBuffer,
         ActiveTimeTotals $activeTimesBuffer,
-        QuoteBuffer $latestQuotesBuffer
+        QuoteBuffer $latestQuotesBuffer,
+        array $channelList
     ) : bool;
 
     public function getChannels() : array;

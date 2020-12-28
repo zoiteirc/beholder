@@ -61,6 +61,8 @@ class Bot extends Client
             $this->registerDebugListener();
         }
 
+        $this->registerChannelControlListeners();
+
         $this->registerStatsListeners();
     }
 
@@ -126,6 +128,63 @@ class Bot extends Client
         $this->on('message', function ($event) {
             echo $event->raw . "\n";
         });
+    }
+
+    protected function registerChannelControlListeners()
+    {
+        if ($this->config->hasBotAdmin()) {
+            $this->on('pm:' . $this->getNick() . ':' . $this->config->getBotAdminNick(), function ($event) {
+                if (preg_match('/^please (?<action>join|leave) (?<channel>[^\s]+) now$/', $event->text, $matches)) {
+                    $action = $matches['action'];
+                    $channel = $matches['channel'];
+
+                    if (!$this->isChannel($channel)) {
+                        $this->pmBotAdmin($channel . ' is not a channel');
+                        return;
+                    }
+
+                    if ('join' === $action) {
+                        $this->setUpChannel($channel);
+                    } else if ('leave' === $action) {
+                        $this->tearDownChannel($channel);
+                    }
+                }
+            });
+        }
+    }
+
+    protected function setUpChannel($channel)
+    {
+        if ($this->isBotWatchingChannel($channel)) {
+            $this->pmBotAdmin('Already in ' . $channel);
+            return;
+        }
+
+        $this->pmBotAdmin('Joining ' . $channel);
+
+        $this->channels[] = $channel;
+
+        $this->join($channel);
+    }
+
+    protected function tearDownChannel($channel)
+    {
+        if (!$this->isBotWatchingChannel($channel)) {
+            $this->pmBotAdmin('Not in ' . $channel);
+            return;
+        }
+
+        $this->pmBotAdmin('Leaving ' . $channel);
+
+        $normalizedChannel = strtolower($channel);
+
+        foreach ($this->channels as $key => $activeChannel) {
+            if (strtolower($activeChannel) === $normalizedChannel) {
+                unset($this->channels[$key]);
+            }
+        }
+
+        $this->part($channel);
     }
 
     protected function registerStatsListeners()
@@ -210,6 +269,7 @@ class Bot extends Client
                 $this->textStatsBuffer,
                 $this->activeTimesBuffer,
                 $this->latestQuotesBuffer,
+                $this->channels,
             );
         } catch (PersistenceException $exception) {
             $this->pmBotAdmin(
