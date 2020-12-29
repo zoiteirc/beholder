@@ -148,6 +148,8 @@ class MySQL implements PersistenceInterface
                 foreach ($lineStatsBuffer->getData() as $type => $channels) {
                     foreach ($channels as $chan => $nicks) {
                         foreach ($nicks as $nick => $quantity) {
+                            $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+
                             $sql[] = <<< EOD
                                 INSERT INTO `line_counts`
                                 SET `type` = "{$db->escape_string($type)}",
@@ -163,6 +165,8 @@ class MySQL implements PersistenceInterface
 
                 foreach ($textStatsBuffer->data() as $nick => $channels) {
                     foreach ($channels as $chan => $totals) {
+                        $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+
                         $sql[] = <<< EOD
                             INSERT INTO `textstats`
                             SET `channel_id` = "{$this->getChannelId($chan)}",
@@ -185,6 +189,8 @@ class MySQL implements PersistenceInterface
                 foreach ($activeTimesBuffer->data() as $nick => $channels) {
                     foreach ($channels as $chan => $hours) {
                         foreach ($hours as $hour => $quantity) {
+                            $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+
                             $sql[] = <<< EOD
                                 INSERT INTO `active_times`
                                 SET `channel_id` = "{$this->getChannelId($chan)}",
@@ -200,6 +206,8 @@ class MySQL implements PersistenceInterface
 
                 foreach ($latestQuotesBuffer->data() as $nick => $channels) {
                     foreach ($channels as $chan => $quote) {
+                        $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+
                         $sql[] = <<< EOD
                             INSERT INTO `latest_quote`
                                 SET `channel_id` = "{$this->getChannelId($chan)}",
@@ -237,6 +245,17 @@ class MySQL implements PersistenceInterface
         );
 
         return true;
+    }
+
+    protected function buildNickNormalizationInsertQuery(\mysqli $db, $nick)
+    {
+        return <<< EOD
+            INSERT INTO `canonical_nicks`
+            SET `normalized_nick` = "{$db->escape_string($this->normalizeNick($nick))}",
+                `regular_nick` = "{$db->escape_string($nick)}"
+            ON DUPLICATE KEY UPDATE
+                `regular_nick` = "{$db->escape_string($nick)}";
+            EOD;
     }
 
     protected function withDatabaseConnection(callable $fn)
@@ -366,6 +385,13 @@ class MySQL implements PersistenceInterface
     protected function getSchema() : array
     {
         return [
+            <<< EOD
+            CREATE TABLE `canonical_nicks` (
+              `normalized_nick` varchar(255) NOT NULL DEFAULT '',
+              `regular_nick` varchar(255) NOT NULL DEFAULT '',
+              PRIMARY KEY (`normalized_nick`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            EOD,
             <<< EOD
             CREATE TABLE `line_counts` (
               `type` int(11) NOT NULL DEFAULT '0',
