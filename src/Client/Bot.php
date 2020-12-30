@@ -47,7 +47,7 @@ class Bot extends Client
         $this->setName($config->getUsername());
         $this->setRealName($config->getRealName());
 
-        $this->ignoreNicks = [];
+        $this->initializeIgnoredNicks();
 
         $this->reconnectInterval = 10;
 
@@ -62,6 +62,8 @@ class Bot extends Client
         }
 
         $this->registerChannelControlListeners();
+
+        $this->registerIgnoreListControlListeners();
 
         $this->registerStatsListeners();
     }
@@ -128,6 +130,146 @@ class Bot extends Client
         $this->on('message', function ($event) {
             echo $event->raw . "\n";
         });
+    }
+
+    protected function registerIgnoreListControlListeners()
+    {
+        if ($this->config->hasBotAdmin()) {
+            $this->on('chat', function ($event) {
+                if ($event->from != $this->config->getBotAdminNick()) {
+                    return;
+                }
+
+                if (!$this->isBotWatchingChannel($event->channel)) {
+                    return;
+                }
+
+                if (
+                    preg_match(
+                        '/^' . $this->nick . ', please (?<action>ignore|behold) (?<nick>[^\s]+) (?<where>globally|in this channel)$/i',
+                        $event->text,
+                        $matches
+                    )
+                ) {
+                    if ($matches['action'] === 'ignore') {
+                        if ($matches['where'] === 'globally') {
+                            // Ignore nick globally
+                            $this->addGlobalIgnore($matches['nick']);
+                            $this->chat($event->channel, 'Okay, I\'ll ignore ' . $matches['nick'] . ' globally.');
+                        } else {
+                            // Ignore nick in this channel
+                            $this->addChannelIgnore($event->channel, $matches['nick']);
+                            $this->chat($event->channel, 'Okay, I\'ll ignore ' . $matches['nick'] . ' in ' . $event->channel . '.');
+                        }
+                    } else {
+                        if ($matches['where'] === 'globally') {
+                            // Behold nick globally
+                            $this->removeGlobalIgnore($matches['nick']);
+                            $this->chat($event->channel, 'Okay, I\'ll stop ignoring ' . $matches['nick'] . ' globally.');
+                        } else {
+                            // Behold nick in this $channel
+                            $this->removeChannelIgnore($event->channel, $matches['nick']);
+                            $this->chat($event->channel, 'Okay, I\'ll stop ignoring ' . $matches['nick'] . ' in ' . $event->channel . '.');
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    protected function initializeIgnoredNicks(): void
+    {
+        $this->ignoreNicks = $this->persistence->getIgnoredNicks();
+    }
+
+    protected function addGlobalIgnore($nick)
+    {
+        $normalizedNick = strtolower($nick);
+
+        if (!in_array($normalizedNick, $this->ignoreNicks['global'], true)) {
+            $this->ignoreNicks['global'][] = $normalizedNick;
+        }
+    }
+
+    protected function removeGlobalIgnore($nick)
+    {
+        $normalizedNick = strtolower($nick);
+
+        $foundKey = array_search($normalizedNick, $this->ignoreNicks['global'], true);
+
+        if (false === $foundKey) {
+            return;
+        }
+
+        unset($this->ignoreNicks['global'][$foundKey]);
+    }
+
+    protected function addChannelIgnore($channel, $nick)
+    {
+        if (!$this->isBotWatchingChannel($channel)) {
+            return;
+        }
+
+        $normalizedNick = strtolower($nick);
+        $normalizedChannel = strtolower($channel);
+
+        if (
+            false === isset($this->ignoreNicks['channels'][$normalizedChannel])
+            || false === in_array($normalizedNick, $this->ignoreNicks['channels'][$normalizedChannel], true)
+        ) {
+            $this->ignoreNicks['channels'][$normalizedChannel][] = $normalizedNick;
+        }
+    }
+
+    protected function removeChannelIgnore($channel, $nick)
+    {
+        if (!$this->isBotWatchingChannel($channel)) {
+            return;
+        }
+
+        $normalizedNick = strtolower($nick);
+        $normalizedChannel = strtolower($channel);
+
+        $noNicksIgnored = !isset($this->ignoreNicks['channels'][$normalizedChannel]);
+
+        if ($noNicksIgnored) {
+            return;
+        }
+
+        $foundKey = array_search($normalizedNick, $this->ignoreNicks['channels'][$normalizedChannel], true);
+
+        if (false === $foundKey) {
+            return;
+        }
+
+        unset($this->ignoreNicks['channels'][$normalizedChannel]);
+    }
+
+    protected function isIgnoredNick(string $nick, string $channel)
+    {
+        $normalizedNick = strtolower($nick);
+
+        if (
+            in_array(
+                $normalizedNick,
+                [
+                    strtolower($this->nick),
+                    strtolower($this->config->getDesiredNick()),
+                ],
+                true,
+            )
+        ) {
+            return true;
+        }
+
+        $normalizedChannel = strtolower($channel);
+
+        return
+            in_array($normalizedNick, $this->ignoreNicks['global'], true)
+            || (
+                isset($this->ignoreNicks['channels'][$normalizedChannel])
+                && in_array($normalizedNick, $this->ignoreNicks['channels'][$normalizedChannel], true)
+            );
     }
 
     protected function registerChannelControlListeners()
@@ -206,16 +348,16 @@ class Bot extends Client
         });
 
         $this->on('kick', function ($event) {
-            if (!$this->isIgnoredNick($event->victim)) {
+            if (!$this->isIgnoredNick($event->victim, $event->channel)) {
                 $this->lineStatsBuffer->add($event->channel, $event->victim, StatsTotalsInterface::TYPE_KICK_VICTIM);
             }
-            if (!$this->isIgnoredNick($event->kicker)) {
+            if (!$this->isIgnoredNick($event->kicker, $event->channel)) {
                 $this->lineStatsBuffer->add($event->channel, $event->kicker, StatsTotalsInterface::TYPE_KICK_PERPETRATOR);
             }
         });
 
         $this->on('join', function ($event) {
-            if ($this->isIgnoredNick($event->nick)) {
+            if ($this->isIgnoredNick($event->nick, $event->channel)) {
                 return;
             }
 
@@ -223,7 +365,7 @@ class Bot extends Client
         });
 
         $this->on('part', function ($event) {
-            if ($this->isIgnoredNick($event->nick)) {
+            if ($this->isIgnoredNick($event->nick, $event->channel)) {
                 return;
             }
 
@@ -231,7 +373,7 @@ class Bot extends Client
         });
 
         $this->on('mode', function ($event) {
-            if ($this->isIgnoredNick($event->nick)) {
+            if ($this->isIgnoredNick($event->nick, $event->channel)) {
                 return;
             }
 
@@ -270,6 +412,7 @@ class Bot extends Client
                 $this->activeTimesBuffer,
                 $this->latestQuotesBuffer,
                 $this->channels,
+                $this->ignoreNicks,
             );
         } catch (PersistenceException $exception) {
             $this->pmBotAdmin(
@@ -299,7 +442,7 @@ class Bot extends Client
 
     protected function recordChatMessage($nick, $channel, $message)
     {
-        if ($this->isIgnoredNick($nick)) {
+        if ($this->isIgnoredNick($nick, $channel)) {
             return;
         }
 
@@ -343,23 +486,6 @@ class Bot extends Client
         if ($this->isFrown($message)) {
             $this->lineStatsBuffer->add($channel, $nick, StatsTotalsInterface::TYPE_FROWN);
         }
-    }
-
-    protected function isIgnoredNick($nick)
-    {
-        if (
-            in_array(
-                $nick,
-                [
-                    $this->nick,
-                    $this->config->getDesiredNick(),
-                    ]
-            )
-        ) {
-            return true;
-        }
-
-        return in_array($nick, $this->ignoreNicks);
     }
 
     protected function isProfane($message)

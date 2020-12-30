@@ -42,6 +42,58 @@ class MySQL implements PersistenceInterface
         return $this->channelsCache;
     }
 
+    public function getIgnoredNicks(): array
+    {
+        return $this->withDatabaseConnection(function (\mysqli $db) {
+            return $this->fetchIgnoredNicks($db);
+        });
+    }
+
+    protected function fetchIgnoredNicks(\mysqli $db)
+    {
+        $ignoredNicks = [
+            'channels' => [],
+            'global' => [],
+        ];
+
+        // Channel level ignores...
+        $result = $this->query(
+            $db,
+            <<< EOD
+                SELECT ig.`normalized_nick` AS `nick`, c.`channel`
+                FROM `ignored_nicks` ig
+                INNER JOIN `channels` c ON c.`id`=ig.`channel_id`
+                EOD
+        );
+
+        if (!$result) {
+            throw new PersistenceException($db->error, $db->errno);
+        }
+
+        while ($row = $result->fetch_assoc()) {
+            $ignoredNicks['channels'][strtolower($row['channel'])][] = $row['nick'];
+        }
+
+        // Global ignores...
+        $result = $this->query(
+            $db,
+            <<< EOD
+                SELECT `normalized_nick` AS `nick`
+                FROM `ignored_nicks_global`
+                EOD
+        );
+
+        if (!$result) {
+            throw new PersistenceException($db->error, $db->errno);
+        }
+
+        while ($row = $result->fetch_assoc()) {
+            $ignoredNicks['global'][] = $row['nick'];
+        }
+
+        return $ignoredNicks;
+    }
+
     protected function fetchChannelsFromDatabase()
     {
         return $this->withDatabaseConnection(function (\mysqli $db) {
@@ -128,12 +180,72 @@ class MySQL implements PersistenceInterface
         }
     }
 
+    protected function synchronizeIgnoreList(\mysqli $db, array $actualList)
+    {
+        $dbList = $this->fetchIgnoredNicks($db);
+
+        $sql = [];
+
+        foreach ($actualList['global'] as $actualListNick) {
+            if (!in_array($actualListNick, $dbList['global'], true)) {
+                $sql[] = <<< EOD
+                INSERT INTO `ignored_nicks_global`
+                SET `normalized_nick` = "{$db->escape_string($actualListNick)}"
+                EOD;
+            }
+        }
+
+        foreach ($dbList['global'] as $dbListNick) {
+            if (!in_array($dbListNick, $actualList['global'], true)) {
+                $sql[] = <<< EOD
+                DELETE FROM `ignored_nicks_global`
+                WHERE `normalized_nick` = "{$db->escape_string($dbListNick)}"
+                EOD;
+            }
+        }
+
+        foreach ($actualList['channels'] as $channel => $actualListNicks) {
+            foreach ($actualListNicks as $actualListNick) {
+                if (
+                    false === isset($dbList['channels'][$channel])
+                    || false === in_array($actualListNick, $dbList['channels'][$channel], true)
+                ) {
+                    $sql[] = <<< EOD
+                    INSERT INTO `ignored_nicks`
+                    SET `normalized_nick` = "{$db->escape_string($actualListNick)}",
+                    `channel_id` = "{$db->escape_string($this->getChannelId($channel))}"
+                    EOD;
+                }
+            }
+        }
+
+        foreach ($dbList['channels'] as $channel => $dbListNicks) {
+            foreach ($dbListNicks as $dbListNick) {
+                if (
+                    false === isset($actualList['channels'][$channel])
+                    || false === in_array($dbListNick, $actualList['channels'][$channel], true)
+                ) {
+                    $sql[] = <<< EOD
+                    DELETE FROM `ignored_nicks`
+                    WHERE `normalized_nick` = "{$db->escape_string($dbListNick)}"
+                    AND `channel_id` = "{$db->escape_string($this->getChannelId($channel))}"
+                    EOD;
+                }
+            }
+        }
+
+        foreach ($sql as $q) {
+            $this->query($db, $q);
+        }
+    }
+
     public function persist(
         StatTotals $lineStatsBuffer,
         TextStatsBuffer $textStatsBuffer,
         ActiveTimeTotals $activeTimesBuffer,
         QuoteBuffer $latestQuotesBuffer,
-        array $channelList
+        array $channelList,
+        array $ignoreList
     ) : bool
     {
         $this->withDatabaseConnection(
@@ -143,11 +255,14 @@ class MySQL implements PersistenceInterface
                 $textStatsBuffer,
                 $activeTimesBuffer,
                 $latestQuotesBuffer,
-                $channelList
+                $channelList,
+                $ignoreList
             ) {
                 $sql = [];
 
                 $this->synchronizeChannelList($db, $channelList);
+
+                $this->synchronizeIgnoreList($db, $ignoreList);
 
                 foreach ($lineStatsBuffer->getData() as $type => $channels) {
                     foreach ($channels as $chan => $nicks) {
@@ -424,9 +539,16 @@ class MySQL implements PersistenceInterface
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             EOD,
             <<< EOD
-            CREATE TABLE `ignore_nick` (
-              `nick` varchar(255) NOT NULL DEFAULT '',
-              PRIMARY KEY (`nick`)
+            CREATE TABLE `ignored_nicks` (
+              `channel_id` int(11) NOT NULL DEFAULT '0',
+              `normalized_nick` varchar(255) NOT NULL DEFAULT '',
+              PRIMARY KEY (`normalized_nick`,`channel_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            EOD,
+            <<< EOD
+            CREATE TABLE `ignored_nicks_global` (
+              `normalized_nick` varchar(255) NOT NULL DEFAULT '',
+              PRIMARY KEY (`normalized_nick`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             EOD,
             <<< EOD

@@ -16,8 +16,11 @@ interface PersistenceInterface
         TextStatsBuffer $textStatsBuffer,
         ActiveTimeTotals $activeTimesBuffer,
         QuoteBuffer $latestQuotesBuffer,
-        array $channelList
+        array $channelList,
+        array $ignoreList
     ) : bool;
 
     public function getChannels() : array;
+
+    public function getIgnoredNicks() : array;
 }
