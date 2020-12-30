@@ -258,6 +258,8 @@ class MySQL implements PersistenceInterface
                 $channelList,
                 $ignoreList
             ) {
+                $recordedCanonicalNicks = [];
+
                 $sql = [];
 
                 $this->synchronizeChannelList($db, $channelList);
@@ -267,7 +269,10 @@ class MySQL implements PersistenceInterface
                 foreach ($lineStatsBuffer->getData() as $type => $channels) {
                     foreach ($channels as $chan => $nicks) {
                         foreach ($nicks as $nick => $quantity) {
-                            $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+                            if (!in_array($nick, $recordedCanonicalNicks, true)) {
+                                $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+                                $recordedCanonicalNicks[] = $nick;
+                            }
 
                             $sql[] = <<< EOD
                                 INSERT INTO `line_counts`
@@ -284,7 +289,10 @@ class MySQL implements PersistenceInterface
 
                 foreach ($textStatsBuffer->data() as $nick => $channels) {
                     foreach ($channels as $chan => $totals) {
-                        $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+                        if (!in_array($nick, $recordedCanonicalNicks, true)) {
+                            $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+                            $recordedCanonicalNicks[] = $nick;
+                        }
 
                         $sql[] = <<< EOD
                             INSERT INTO `textstats`
@@ -308,7 +316,10 @@ class MySQL implements PersistenceInterface
                 foreach ($activeTimesBuffer->data() as $nick => $channels) {
                     foreach ($channels as $chan => $hours) {
                         foreach ($hours as $hour => $quantity) {
-                            $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+                            if (!in_array($nick, $recordedCanonicalNicks, true)) {
+                                $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+                                $recordedCanonicalNicks[] = $nick;
+                            }
 
                             $sql[] = <<< EOD
                                 INSERT INTO `active_times`
@@ -325,7 +336,10 @@ class MySQL implements PersistenceInterface
 
                 foreach ($latestQuotesBuffer->data() as $nick => $channels) {
                     foreach ($channels as $chan => $quote) {
-                        $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+                        if (!in_array($nick, $recordedCanonicalNicks, true)) {
+                            $sql[] = $this->buildNickNormalizationInsertQuery($db, $nick);
+                            $recordedCanonicalNicks[] = $nick;
+                        }
 
                         $sql[] = <<< EOD
                             INSERT INTO `latest_quote`
