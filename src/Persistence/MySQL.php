@@ -105,14 +105,18 @@ class MySQL implements PersistenceInterface
             }
         }
 
+        $now = time();
+
         foreach ($channelList as $channel) {
-            if (!$this->hasChannel($channel)) {
-                // This channel has been added since we last persisted
-                $sql[] = <<< EOD
-                    INSERT INTO `channels`
-                    SET `channel` = "{$db->escape_string($channel)}";
-                    EOD;
-            }
+            $sql[] = <<< EOD
+                INSERT INTO `channels`
+                SET
+                    `channel` = "{$db->escape_string($channel)}",
+                    `created_at` = "{$now}",
+                    `updated_at` = "{$now}"
+                ON DUPLICATE KEY UPDATE
+                    `updated_at` = "{$now}";
+                EOD;
         }
 
         foreach ($sql as $q) {
@@ -414,6 +418,8 @@ class MySQL implements PersistenceInterface
             CREATE TABLE `channels` (
               `id` int(11) NOT NULL AUTO_INCREMENT,
               `channel` varchar(255) UNIQUE NOT NULL DEFAULT '',
+              `created_at` int NOT NULL,
+              `updated_at` int NOT NULL,
               PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             EOD,
