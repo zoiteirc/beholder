@@ -2,7 +2,7 @@
 
 namespace App\Client;
 
-use App\Configuration;
+use App\ConfigurationInterface;
 use App\Persistence\Exceptions\PersistenceException;
 use App\Persistence\PersistenceInterface;
 use App\Stats\ActiveTimeTotals;
@@ -14,7 +14,7 @@ use App\Stats\TextStatsBuffer;
 
 class Bot extends Client
 {
-    protected Configuration $config;
+    protected ConfigurationInterface $config;
 
     protected StatTotals $lineStatsBuffer;
     protected TextStatsBuffer $textStatsBuffer;
@@ -32,7 +32,7 @@ class Bot extends Client
 
     protected PersistenceInterface $persistence;
 
-    public function __construct(Configuration $config, PersistenceInterface $persistence)
+    public function __construct(ConfigurationInterface $config, PersistenceInterface $persistence)
     {
         parent::__construct(
             $config->getDesiredNick(),

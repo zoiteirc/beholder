@@ -2,7 +2,7 @@
 
 namespace App;
 
-class Configuration
+class Configuration implements ConfigurationInterface
 {
     private string $desiredNick;
     private string $username;
