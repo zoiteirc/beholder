@@ -1,0 +1,5 @@
+parameters: []
+
+services:
+  run_bot_command:
+    class:     \App\Command\RunBotCommand
