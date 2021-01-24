@@ -14,10 +14,6 @@ $container = require('container.php');
 /** @var \App\Command\RunBotCommand $runBotCommand */
 $runBotCommand = $container->get('run_bot_command');
 
-$dotenv = new \Symfony\Component\Dotenv\Dotenv();
-
-$dotenv->load('.env');
-
 $application = (new Application());
 
 $application->add($runBotCommand);

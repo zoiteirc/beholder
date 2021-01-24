@@ -2,4 +2,24 @@ parameters: []
 
 services:
   run_bot_command:
-    class:     \App\Command\RunBotCommand
+    class: \App\Command\RunBotCommand
+    arguments: [null, '@bot']
+
+  bot:
+    class: \App\Client\Bot
+    arguments: ['@configuration', '@persistence']
+
+  configuration:
+    class: \App\EnvConfiguration
+    arguments: ['@dotenv']
+
+  persistence:
+    class: \App\Persistence\MySQL
+    arguments:
+      - hostname: db
+        username: appuser
+        password: appsecret
+        database: app
+
+  dotenv:
+    class: \Symfony\Component\Dotenv\Dotenv

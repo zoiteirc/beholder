@@ -2,7 +2,9 @@
 
 namespace App;
 
-class Configuration implements ConfigurationInterface
+use Symfony\Component\Dotenv\Dotenv;
+
+class EnvConfiguration implements ConfigurationInterface
 {
     private string $desiredNick;
     private string $username;
@@ -20,41 +22,25 @@ class Configuration implements ConfigurationInterface
     private int $writeFrequencySeconds;
     private bool $debugMode;
 
-    public function __construct(
-        string $desiredNick,
-        string $username,
-        string $realName,
-
-        string $host,
-        int $port,
-        bool $useTls,
-
-        string $nickServAccountName = null,
-        string $nickServPassword = null,
-
-        string $botAdminNick = null,
-
-        int $writeFrequencySeconds = 60,
-
-        bool $debugMode = false
-    )
+    public function __construct(Dotenv $dotenv)
     {
-        $this->desiredNick = $desiredNick;
-        $this->username = $username;
-        $this->realName = $realName;
+        $dotenv->load('.env');
 
-        $this->host = $host;
-        $this->port = $port;
-        $this->useTls = $useTls;
+        $this->desiredNick = $_ENV['BOT_NICK'] ?? 'beholder';
+        $this->username = $_ENV['BOT_USERNAME'] ?? 'beholder';
+        $this->realName = $_ENV['BOT_REALNAME'] ?? 'Beholder - IRC Channel Stats Aggregator';
 
-        $this->nickServAccountName = $nickServAccountName;
-        $this->nickServPassword = $nickServPassword;
+        $this->host = $_ENV['SERVER_HOSTNAME'] ?? 'irc.zoite.net';
+        $this->port = $_ENV['SERVER_PORT'] ?? 6667;
+        $this->useTls = (bool) $_ENV['USE_TLS'] ?? false;
 
-        $this->botAdminNick = $botAdminNick;
+        $this->nickServAccountName = $_ENV['NICKSERV_ACCOUNT'] ?? null;
+        $this->nickServPassword = $_ENV['NICKSERV_PASSWORD'] ?? null;
 
-        $this->writeFrequencySeconds = $writeFrequencySeconds;
+        $this->botAdminNick = $_ENV['BOT_ADMIN_NICK'] ?? null;
 
-        $this->debugMode = $debugMode;
+        $this->writeFrequencySeconds = $_ENV['WRITE_FREQUENCY'] ?? 60;
+        $this->debugMode = (bool) $_ENV['DEBUG'] ?? false;
     }
 
     public function getDesiredNick(): string

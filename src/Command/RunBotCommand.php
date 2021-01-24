@@ -3,8 +3,6 @@
 namespace App\Command;
 
 use App\Client\Bot;
-use App\Configuration;
-use App\Persistence\MySQL;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Command\LockableTrait;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,6 +14,18 @@ class RunBotCommand extends Command
 
     protected static $defaultName = 'bot:run';
 
+    protected Bot $bot;
+
+    public function __construct(
+        string $name = null,
+        Bot $bot
+    )
+    {
+        parent::__construct($name);
+
+        $this->bot = $bot;
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         if (!$this->lock()) {
@@ -23,33 +33,7 @@ class RunBotCommand extends Command
             return Command::SUCCESS;
         }
 
-        $bot = new Bot(
-            new Configuration(
-                $_ENV['BOT_NICK'] ?? 'beholder',
-                $_ENV['BOT_USERNAME'] ?? 'beholder',
-                $_ENV['BOT_REALNAME'] ?? 'Beholder - IRC Channel Stats Aggregator',
-
-                $_ENV['SERVER_HOSTNAME'] ?? 'irc.zoite.net',
-                $_ENV['SERVER_PORT'] ?? 6667,
-                $_ENV['USE_TLS'] ?? false,
-
-                $_ENV['NICKSERV_ACCOUNT'] ?? null,
-                $_ENV['NICKSERV_PASSWORD'] ?? null,
-
-                $_ENV['BOT_ADMIN_NICK'] ?? null,
-
-                $_ENV['WRITE_FREQUENCY'] ?? 60,
-                (bool) $_ENV['DEBUG'] ?? false,
-            ),
-            new MySQL([
-                'hostname' => $_ENV['DB_HOST'] ?? 'localhost',
-                'username' => $_ENV['DB_USER'] ?? 'root',
-                'password' => $_ENV['DB_PASSWORD'] ?? '',
-                'database' => $_ENV['DB_NAME'] ?? 'beholder',
-            ])
-        );
-
-        $bot->connect();
+        $this->bot->connect();
 
         return Command::SUCCESS;
     }
