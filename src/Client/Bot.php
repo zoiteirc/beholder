@@ -3,6 +3,7 @@
 namespace App\Client;
 
 use App\ConfigurationInterface;
+use App\Modules\SimpleCommands\SimpleCommandsModule;
 use App\Persistence\Exceptions\PersistenceException;
 use App\Persistence\PersistenceInterface;
 use App\Stats\ActiveTimeTotals;
@@ -66,6 +67,9 @@ class Bot extends Client
         $this->registerIgnoreListControlListeners();
 
         $this->registerStatsListeners();
+
+        $simpleCommandsModule = new SimpleCommandsModule($this);
+        $simpleCommandsModule->boot();
     }
 
     protected function initializeChannelsList()
