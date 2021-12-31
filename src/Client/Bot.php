@@ -93,17 +93,18 @@ class Bot extends Client
 
         // Identify if challenged
         $this->on('notice:' . $this->getNick() . ':NickServ,pm:' . $this->getNick() . ':NickServ', function ($event) {
-            if (!$this->config->hasNickServAccount()) {
-                $this->pmBotAdmin(
-                    'WARNING: Challenged to identify with NickServ, but no NickServ account details configured. Is this nick already taken?'
-                );
-                return;
-            }
 
             if (
                 false !== strpos(strtolower($event->text), 'is registered')
                 && false !== strpos(strtolower($event->text), 'identify via')
             ) {
+                if (!$this->config->hasNickServAccount()) {
+                    $this->pmBotAdmin(
+                        'WARNING: Challenged to identify with NickServ, but no NickServ account details configured. Is this nick already taken?'
+                    );
+                    return;
+                }
+
                 $this->pm('NickServ', 'IDENTIFY ' . $this->config->getNickServAccountName() . ' ' . $this->config->getNickServPassword());
             }
         });
