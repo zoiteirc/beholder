@@ -292,6 +292,14 @@ class Bot extends Client
                         $this->tearDownChannel($channel);
                     }
                 }
+
+                if ('mysql debug on' === $event->text) {
+                    $_ENV['MYSQL_DEBUG'] = true;
+                }
+
+                if ('mysql debug off' === $event->text) {
+                    $_ENV['MYSQL_DEBUG'] = false;
+                }
             });
         }
     }
