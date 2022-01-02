@@ -534,6 +534,13 @@ class Client extends Socket
         return $this->chat($nick, $message);
     }
 
+    public function notice($nick, $message)
+    {
+        $this->sendPrefixed("$this->nick!$this->name", self::CMD_NOTICE, $nick, $message);
+
+        return $this;
+    }
+
     public function nick($nick = null)
     {
         if (!$nick) {
