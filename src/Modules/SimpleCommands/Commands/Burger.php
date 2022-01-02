@@ -41,7 +41,7 @@ class Burger implements PerformsSimpleCommands, ExplainsCommands
             return;
         }
 
-        $message = $this->action('makes up big a bacon double cheeseburger for ' . $this->bold($target));
+        $message = $this->action('makes up a big bacon double cheeseburger for ' . $this->bold($target));
 
         $this->bot->chat($channel, $message);
     }
