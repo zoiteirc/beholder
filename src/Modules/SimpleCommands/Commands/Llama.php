@@ -1,19 +1,23 @@
 <?php
 
-namespace App\Modules\SimpleCommands;
+namespace App\Modules\SimpleCommands\Commands;
 
 use App\Client\Bot;
+use App\Modules\SimpleCommands\ExplainsCommands;
+use App\Modules\SimpleCommands\PerformsSimpleCommands;
 use App\Traits\FormatsIrcMessages;
 
-class Stick
+class Llama implements PerformsSimpleCommands, ExplainsCommands
 {
     use FormatsIrcMessages;
 
     protected Bot $bot;
+    protected string $triggerWord;
 
-    public function __construct(Bot $bot)
+    public function __construct(Bot $bot, $triggerWord)
     {
         $this->bot = $bot;
+        $this->triggerWord = $triggerWord;
     }
 
     /**
@@ -25,16 +29,20 @@ class Stick
     public function trigger(int $timestamp, string $nick, string $channel, array $arguments)
     {
         // Hit the required person... or the caller if no other nick is provided.
-        $target = count($arguments) ? $arguments[0] : $nick;
+        $target = count($arguments) ? implode(' ', $arguments) : $nick;
 
         $this->bot->chat(
             $channel,
             $this->action(
-                'beats '
+                'slaps '
                 . $this->bold($target)
-                . ' down with a large stick... '
-                . $this->bold('owned!')
+                . ' around a bit with a big smelly ass farm llama'
             )
         );
+    }
+
+    public function getCommandExplanations(): array
+    {
+        return [$this->triggerWord . ' [target]'];
     }
 }

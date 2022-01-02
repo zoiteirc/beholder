@@ -29,4 +29,6 @@ interface ConfigurationInterface
     public function getWriteFrequencySeconds(): int;
 
     public function isDebugMode(): bool;
+
+    public function getCommandPrefix(): string;
 }

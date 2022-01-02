@@ -22,6 +22,8 @@ class EnvConfiguration implements ConfigurationInterface
     private int $writeFrequencySeconds;
     private bool $debugMode;
 
+    private string $commandPrefix;
+
     public function __construct(Dotenv $dotenv)
     {
         $dotenv->load('.env');
@@ -41,6 +43,8 @@ class EnvConfiguration implements ConfigurationInterface
 
         $this->writeFrequencySeconds = $_ENV['WRITE_FREQUENCY'] ?? 60;
         $this->debugMode = (bool) $_ENV['DEBUG'] ?? false;
+
+        $this->commandPrefix = (string) $_ENV['COMMAND_PREFIX'] ?? '!';
     }
 
     public function getDesiredNick(): string
@@ -106,5 +110,10 @@ class EnvConfiguration implements ConfigurationInterface
     public function isDebugMode(): bool
     {
         return $this->debugMode;
+    }
+
+    public function getCommandPrefix(): string
+    {
+        return $this->commandPrefix;
     }
 }

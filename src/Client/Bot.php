@@ -3,6 +3,7 @@
 namespace App\Client;
 
 use App\ConfigurationInterface;
+use App\Modules\CommandList\CommandListModule;
 use App\Modules\SimpleCommands\SimpleCommandsModule;
 use App\Persistence\Exceptions\PersistenceException;
 use App\Persistence\PersistenceInterface;
@@ -32,6 +33,8 @@ class Bot extends Client
     protected $channels = [];
 
     protected PersistenceInterface $persistence;
+
+    protected array $modules;
 
     public function __construct(ConfigurationInterface $config, PersistenceInterface $persistence)
     {
@@ -68,8 +71,24 @@ class Bot extends Client
 
         $this->registerStatsListeners();
 
-        $simpleCommandsModule = new SimpleCommandsModule($this);
-        $simpleCommandsModule->boot();
+        $this->modules = [
+            new SimpleCommandsModule($this, $config),
+            new CommandListModule($this, $config),
+        ];
+
+        $this->mapModules(function ($module) {
+            $module->boot();
+        });
+    }
+
+    public function mapModules(callable $closure)
+    {
+        return array_map($closure, $this->modules);
+    }
+
+    public function reduceModules(callable $closure, $initial = null)
+    {
+        return array_reduce($this->modules, $closure, $initial);
     }
 
     protected function initializeChannelsList()
