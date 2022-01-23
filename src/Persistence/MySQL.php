@@ -15,7 +15,7 @@ class MySQL implements PersistenceInterface
     protected string $password;
     protected string $database;
 
-    protected int $dbSchemaVersion = 1;
+    protected int $dbSchemaVersion = 2;
 
     protected ?array $channelsCache = null;
 
@@ -475,6 +475,15 @@ class MySQL implements PersistenceInterface
         $result = $result->fetch_assoc();
 
         if ($result['schema_version'] != $this->dbSchemaVersion) {
+            if (
+                $result['schema_version'] == 1
+                && $this->dbSchemaVersion == 2
+            ) {
+                $this->createGeneralConfigTable($db);
+                $this->query($db, 'UPDATE `beholder_config` SET `schema_version` = 2');
+                return;
+            }
+
             $expected = $this->dbSchemaVersion;
             $actual = $result['schema_version'];
             throw new PersistenceException(
@@ -512,6 +521,27 @@ class MySQL implements PersistenceInterface
             )
         ) {
             throw new PersistenceException($db->error, $db->errno);
+        }
+
+        $this->createGeneralConfigTable($db);
+    }
+
+    protected function createGeneralConfigTable(\mysqli $db)
+    {
+        $ddlStatements = [
+            <<< EOD
+            CREATE TABLE `config` (
+              `config_key` varchar(255) NOT NULL DEFAULT '',
+              `config_value` varchar(255) NOT NULL DEFAULT '',
+              PRIMARY KEY (`config_key`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            EOD,
+        ];
+
+        foreach ($ddlStatements as $ddl) {
+            if (!$this->query($db, $ddl)) {
+                throw new PersistenceException($db->error, $db->errno);
+            }
         }
     }
 
