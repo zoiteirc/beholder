@@ -4,6 +4,8 @@ namespace App\Client;
 
 use App\ConfigurationInterface;
 use App\Modules\CommandList\CommandListModule;
+use App\Modules\Quotes\Persistence\MySQL;
+use App\Modules\Quotes\QuotesModule;
 use App\Modules\SimpleCommands\SimpleCommandsModule;
 use App\Persistence\Exceptions\PersistenceException;
 use App\Persistence\PersistenceInterface;
@@ -74,6 +76,16 @@ class Bot extends Client
         $this->modules = [
             new SimpleCommandsModule($this, $config),
             new CommandListModule($this, $config),
+            new QuotesModule(
+                $this,
+                $config,
+                new MySQL([
+                    'hostname' => 'db',
+                    'username' => 'appuser',
+                    'password' => 'appsecret',
+                    'database' => 'app',
+                ]),
+            )
         ];
 
         $this->mapModules(function ($module) {
