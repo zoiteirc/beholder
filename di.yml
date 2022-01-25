@@ -14,7 +14,7 @@ services:
     arguments: ['@dotenv']
 
   persistence:
-    class: \App\Persistence\MySQL
+    class: \App\Persistence\Core\MySQL
     arguments:
       - hostname: db
         username: appuser

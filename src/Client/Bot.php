@@ -8,7 +8,7 @@ use App\Modules\CommandList\CommandListModule;
 use App\Modules\Quotes\Persistence\MySQL;
 use App\Modules\Quotes\QuotesModule;
 use App\Modules\SimpleCommands\SimpleCommandsModule;
-use App\Persistence\PersistenceInterface;
+use App\Persistence\Core\PersistenceInterface;
 
 class Bot extends Client
 {

@@ -26,14 +26,14 @@ class MySQL extends Pdo implements PersistenceInterface
         return [
             1 => [
                 <<< EOD
-                CREATE TABLE `canonical_nicks` (
+                CREATE TABLE `behold_canonical_nicks` (
                   `normalized_nick` varchar(255) NOT NULL DEFAULT '',
                   `regular_nick` varchar(255) NOT NULL DEFAULT '',
                   PRIMARY KEY (`normalized_nick`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 EOD,
                 <<< EOD
-                CREATE TABLE `line_counts` (
+                CREATE TABLE `behold_line_counts` (
                   `type` int(11) NOT NULL DEFAULT '0',
                   `channel_id` int(11) NOT NULL DEFAULT '0',
                   `nick` varchar(255) NOT NULL DEFAULT '',
@@ -42,7 +42,7 @@ class MySQL extends Pdo implements PersistenceInterface
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 EOD,
                 <<< EOD
-                CREATE TABLE `active_times` (
+                CREATE TABLE `behold_active_times` (
                   `channel_id` int(11) NOT NULL DEFAULT '0',
                   `nick` varchar(255) NOT NULL DEFAULT '',
                   `hour` tinyint(2) NOT NULL DEFAULT '0',
@@ -51,7 +51,7 @@ class MySQL extends Pdo implements PersistenceInterface
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 EOD,
                 <<< EOD
-                CREATE TABLE `channels` (
+                CREATE TABLE `behold_channels` (
                   `id` int(11) NOT NULL AUTO_INCREMENT,
                   `channel` varchar(255) UNIQUE NOT NULL DEFAULT '',
                   `created_at` int NOT NULL,
@@ -60,20 +60,20 @@ class MySQL extends Pdo implements PersistenceInterface
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 EOD,
                 <<< EOD
-                CREATE TABLE `ignored_nicks` (
+                CREATE TABLE `behold_ignored_nicks` (
                   `channel_id` int(11) NOT NULL DEFAULT '0',
                   `normalized_nick` varchar(255) NOT NULL DEFAULT '',
                   PRIMARY KEY (`normalized_nick`,`channel_id`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 EOD,
                 <<< EOD
-                CREATE TABLE `ignored_nicks_global` (
+                CREATE TABLE `behold_ignored_nicks_global` (
                   `normalized_nick` varchar(255) NOT NULL DEFAULT '',
                   PRIMARY KEY (`normalized_nick`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 EOD,
                 <<< EOD
-                CREATE TABLE `latest_quote` (
+                CREATE TABLE `behold_latest_quote` (
                   `channel_id` int(11) NOT NULL DEFAULT '0',
                   `nick` varchar(255) NOT NULL DEFAULT '',
                   `quote` varchar(512) NOT NULL DEFAULT '',
@@ -81,7 +81,7 @@ class MySQL extends Pdo implements PersistenceInterface
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 EOD,
                 <<< EOD
-                CREATE TABLE `textstats` (
+                CREATE TABLE `behold_textstats` (
                   `channel_id` int(11) NOT NULL DEFAULT '0',
                   `nick` varchar(255) NOT NULL DEFAULT '',
                   `messages` int(11) NOT NULL DEFAULT '0',
@@ -133,7 +133,7 @@ class MySQL extends Pdo implements PersistenceInterface
 
                             $statement = $connectionResource->prepare(
                                 <<< EOD
-                                INSERT INTO `line_counts`
+                                INSERT INTO `behold_line_counts`
                                 SET `type` = :type,
                                     `channel_id` = :channel_id,
                                     `nick` = :nickname,
@@ -162,7 +162,7 @@ class MySQL extends Pdo implements PersistenceInterface
 
                         $statement = $connectionResource->prepare(
                             <<< EOD
-                            INSERT INTO `textstats`
+                            INSERT INTO `behold_textstats`
                             SET `channel_id` = :channel_id,
                                 `nick` = :nickname,
                                 `messages` = :quantity_messages,
@@ -199,7 +199,7 @@ class MySQL extends Pdo implements PersistenceInterface
 
                             $statement = $connectionResource->prepare(
                                 <<< EOD
-                                INSERT INTO `active_times`
+                                INSERT INTO `behold_active_times`
                                 SET `channel_id` = :channel_id,
                                     `nick` = :nickname,
                                     `hour` = :hour,
@@ -228,7 +228,7 @@ class MySQL extends Pdo implements PersistenceInterface
 
                         $statement = $connectionResource->prepare(
                             <<< EOD
-                            INSERT INTO `latest_quote`
+                            INSERT INTO `behold_latest_quote`
                                 SET `channel_id` = :channel_id,
                                     `nick` = :nickname,
                                     `quote` = :quote
@@ -295,11 +295,11 @@ class MySQL extends Pdo implements PersistenceInterface
                 // This channel has been removed since we last persisted
                 foreach (
                     [
-                        'DELETE FROM `line_counts` WHERE `id` = :channel_id',
-                        'DELETE FROM `active_times` WHERE `id` = :channel_id',
-                        'DELETE FROM `latest_quote` WHERE `id` = :channel_id',
-                        'DELETE FROM `textstats` WHERE `id` = :channel_id',
-                        'DELETE FROM `channels` WHERE `id` = :channel_id',
+                        'DELETE FROM `behold_line_counts` WHERE `channel_id` = :channel_id',
+                        'DELETE FROM `behold_active_times` WHERE `channel_id` = :channel_id',
+                        'DELETE FROM `behold_latest_quote` WHERE `channel_id` = :channel_id',
+                        'DELETE FROM `behold_textstats` WHERE `channel_id` = :channel_id',
+                        'DELETE FROM `behold_channels` WHERE `id` = :channel_id',
                     ] as $sql
                 ) {
                     $statements[] = $connectionResource
@@ -315,7 +315,7 @@ class MySQL extends Pdo implements PersistenceInterface
             $statement = $connectionResource
                 ->prepare(
                     <<< EOD
-                    INSERT INTO `channels`
+                    INSERT INTO `behold_channels`
                     SET
                         `channel` = :channel_name,
                         `created_at` = :now,
@@ -352,7 +352,7 @@ class MySQL extends Pdo implements PersistenceInterface
             if (! in_array($actualListNick, $dbList['global'], true)) {
                 $statement = $connectionResource->prepare(
                     <<< EOD
-                    INSERT INTO `ignored_nicks_global`
+                    INSERT INTO `behold_ignored_nicks_global`
                     SET `normalized_nick` = :nickname
                     EOD,
                 );
@@ -365,7 +365,7 @@ class MySQL extends Pdo implements PersistenceInterface
             if (! in_array($dbListNick, $actualList['global'], true)) {
                 $statement = $connectionResource->prepare(
                     <<< EOD
-                    DELETE FROM `ignored_nicks_global`
+                    DELETE FROM `behold_ignored_nicks_global`
                     WHERE `normalized_nick` = :nickname
                     EOD,
                 );
@@ -382,7 +382,7 @@ class MySQL extends Pdo implements PersistenceInterface
                 ) {
                     $statement = $connectionResource->prepare(
                         <<< EOD
-                        INSERT INTO `ignored_nicks`
+                        INSERT INTO `behold_ignored_nicks`
                         SET `normalized_nick` = :nickname,
                         `channel_id` = :channel_id
                         EOD,
@@ -404,7 +404,7 @@ class MySQL extends Pdo implements PersistenceInterface
                 ) {
                     $statement = $connectionResource->prepare(
                         <<< EOD
-                        DELETE FROM `ignored_nicks`
+                        DELETE FROM `behold_ignored_nicks`
                         WHERE `normalized_nick` = :nickname
                         AND `channel_id` = :channel_id
                         EOD,
@@ -461,8 +461,8 @@ class MySQL extends Pdo implements PersistenceInterface
             $connectionResource,
             <<< EOD
             SELECT ig.`normalized_nick` AS `nick`, c.`channel`
-            FROM `ignored_nicks` ig
-            INNER JOIN `channels` c ON c.`id` = ig.`channel_id`
+            FROM `behold_ignored_nicks` ig
+            INNER JOIN `behold_channels` c ON c.`id` = ig.`channel_id`
             EOD,
         );
 
@@ -475,7 +475,7 @@ class MySQL extends Pdo implements PersistenceInterface
             $connectionResource,
             <<< EOD
             SELECT `normalized_nick` AS `nick`
-            FROM `ignored_nicks_global`
+            FROM `behold_ignored_nicks_global`
             EOD,
         );
 
@@ -509,7 +509,7 @@ class MySQL extends Pdo implements PersistenceInterface
                 $channels = [];
 
                 $result = $connectionResource
-                    ->query('SELECT `id`, `channel` FROM `channels`');
+                    ->query('SELECT `id`, `channel` FROM `behold_channels`');
 
                 if (false === $result) {
                     throw new PdoPersistenceException($connectionResource);
@@ -530,7 +530,7 @@ class MySQL extends Pdo implements PersistenceInterface
     {
         $statement = $connectionResource->prepare(
             <<< EOD
-            INSERT INTO `canonical_nicks`
+            INSERT INTO `behold_canonical_nicks`
             SET `normalized_nick` = :normalized_nick,
                 `regular_nick` = :regular_nick
             ON DUPLICATE KEY UPDATE
