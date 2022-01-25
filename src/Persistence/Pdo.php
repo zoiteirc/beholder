@@ -93,13 +93,27 @@ abstract class Pdo
         $result->closeCursor();
 
         if ($isTableMissing) {
-            throw new PersistenceException('No config table found');
+            $result = $connectionResource->query(
+                <<< EOD
+                CREATE TABLE `core_config` (
+                    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    `config_key` VARCHAR(255) NOT NULL DEFAULT '',
+                    `config_value` VARCHAR(255) NOT NULL DEFAULT '',
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY(`config_key`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                EOD
+            );
+
+            if (false === $result) {
+                throw new PdoPersistenceException($connectionResource);
+            }
         }
 
         $statement = $connectionResource->prepare(
             <<< EOD
             SELECT `config_value`
-            FROM `config`
+            FROM `core_config`
             WHERE `config_key` = :key
             LIMIT 1
             EOD
@@ -166,7 +180,7 @@ abstract class Pdo
 
         $statement = $connectionResource->prepare(
             <<< EOD
-            INSERT INTO `config`
+            INSERT INTO `core_config`
             SET `config_key` = :key,
             `config_value` = :value
             ON DUPLICATE KEY UPDATE `config_value` = :value;

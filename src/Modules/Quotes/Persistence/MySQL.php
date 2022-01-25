@@ -31,7 +31,7 @@ class MySQL implements PersistenceInterface
 
     protected function checkSchema(\PDO $connectionResource)
     {
-        $result = $connectionResource->query('SHOW TABLES LIKE "config"');
+        $result = $connectionResource->query('SHOW TABLES LIKE "core_config"');
 
         if (false === $result) {
             throw new PdoPersistenceException($connectionResource);
@@ -48,7 +48,7 @@ class MySQL implements PersistenceInterface
         $result = $connectionResource->query(
             <<< EOD
             SELECT `config_value`
-            FROM `config`
+            FROM `core_config`
             WHERE `config_key` = "quotes_schema_version"
             LIMIT 1
             EOD
@@ -101,7 +101,7 @@ class MySQL implements PersistenceInterface
 
         $statement = $connectionResource->prepare(
             <<< EOD
-            INSERT INTO `config`
+            INSERT INTO `core_config`
             SET `config_key` = :key,
             `config_value` = :value
             ON DUPLICATE KEY UPDATE `config_value` = :value;
