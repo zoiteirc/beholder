@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Stats;
+namespace App\Modules\Behold\Stats;
 
 class QuoteBuffer
 {
