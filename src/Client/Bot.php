@@ -175,7 +175,7 @@ class Bot extends Client
 
     protected function setUpChannel($channel)
     {
-        if ($this->isBotWatchingChannel($channel)) {
+        if ($this->isBotMemberOfChannel($channel)) {
             $this->pmBotAdmin('Already in ' . $channel);
             return;
         }
@@ -189,7 +189,7 @@ class Bot extends Client
 
     protected function tearDownChannel($channel)
     {
-        if (!$this->isBotWatchingChannel($channel)) {
+        if (!$this->isBotMemberOfChannel($channel)) {
             $this->pmBotAdmin('Not in ' . $channel);
             return;
         }
@@ -224,7 +224,7 @@ class Bot extends Client
         );
     }
 
-    protected function isBotWatchingChannel($channel): bool
+    protected function isBotMemberOfChannel($channel): bool
     {
         if (!$this->isChannel($channel)) {
             return false;
