@@ -14,7 +14,7 @@ class Bot extends Client
 {
     protected ConfigurationInterface $config;
 
-    protected $channels = [];
+    protected array $channels = [];
 
     protected PersistenceInterface $persistence;
 
