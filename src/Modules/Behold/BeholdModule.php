@@ -49,6 +49,7 @@ class BeholdModule implements BotModule
         $this->initializeIgnoredNicks();
         $this->initializeChannelsList();
         $this->initializeBuffers();
+        $this->registerChannelControlListeners();
         $this->registerIgnoreListControlListeners();
         $this->registerStatsListeners();
     }
@@ -72,6 +73,79 @@ class BeholdModule implements BotModule
         $this->monologueMonitor = new MonologueMonitor();
     }
 
+    protected function registerChannelControlListeners()
+    {
+        if ($this->configuration->hasBotAdmin()) {
+            $pmToBotFromAdmin = 'pm:' . $this->bot->getNick() . ':' . $this->configuration->getBotAdminNick();
+            $this->bot->on($pmToBotFromAdmin, function ($event) {
+                if (
+                    preg_match(
+                        '/^please (?<action>behold|disregard) the channel (?<channel>[^\s]+) now$/',
+                        $event->text,
+                        $matches,
+                    )
+                ) {
+                    $action = $matches['action'];
+                    $channel = $matches['channel'];
+
+                    if (!$this->bot->isChannel($channel)) {
+                        $this->bot->pmBotAdmin($channel . ' is not a channel');
+                        return;
+                    }
+
+                    if ('behold' === $action) {
+                        $this->startBeholding($channel);
+                    } else if ('disregard' === $action) {
+                        $this->stopBeholding($channel);
+                    }
+                }
+
+                if ('mysql debug on' === $event->text) {
+                    $_ENV['MYSQL_DEBUG'] = true;
+                }
+
+                if ('mysql debug off' === $event->text) {
+                    $_ENV['MYSQL_DEBUG'] = false;
+                }
+            });
+        }
+    }
+
+    protected function startBeholding($channel)
+    {
+        if (! $this->bot->isBotMemberOfChannel($channel)) {
+            $this->bot->pmBotAdmin("Sorry, I'm not currently in $channel");
+            return;
+        }
+
+        if ($this->isBotBeholdingChannel($channel)) {
+            $this->bot->pmBotAdmin("I'm already beholding $channel");
+            return;
+        }
+
+        $this->bot->pmBotAdmin("I will begin beholding $channel");
+
+        $this->channels[] = $channel;
+    }
+
+    protected function stopBeholding($channel)
+    {
+        if (! $this->isBotBeholdingChannel($channel)) {
+            $this->bot->pmBotAdmin("I'm already disregarding $channel");
+            return;
+        }
+
+        $this->bot->pmBotAdmin("From now on I will disregard $channel");
+
+        $normalizedChannel = strtolower($channel);
+
+        foreach ($this->channels as $key => $activeChannel) {
+            if (strtolower($activeChannel) === $normalizedChannel) {
+                unset($this->channels[$key]);
+            }
+        }
+    }
+
     protected function registerIgnoreListControlListeners()
     {
         if ($this->configuration->hasBotAdmin()) {
@@ -80,7 +154,7 @@ class BeholdModule implements BotModule
                     return;
                 }
 
-                if (!$this->isBotWatchingChannel($event->channel)) {
+                if (! $this->isBotBeholdingChannel($event->channel)) {
                     return;
                 }
 
@@ -117,7 +191,7 @@ class BeholdModule implements BotModule
         }
     }
 
-    protected function isBotWatchingChannel($channel): bool
+    protected function isBotBeholdingChannel($channel): bool
     {
         if (!$this->bot->isChannel($channel)) {
             return false;
@@ -153,7 +227,7 @@ class BeholdModule implements BotModule
 
     protected function addChannelIgnore($channel, $nick)
     {
-        if (!$this->isBotWatchingChannel($channel)) {
+        if (!$this->isBotBeholdingChannel($channel)) {
             return;
         }
 
@@ -170,7 +244,7 @@ class BeholdModule implements BotModule
 
     protected function removeChannelIgnore($channel, $nick)
     {
-        if (!$this->isBotWatchingChannel($channel)) {
+        if (!$this->isBotBeholdingChannel($channel)) {
             return;
         }
 
@@ -199,7 +273,7 @@ class BeholdModule implements BotModule
         });
 
         $this->bot->on('chat', function ($event) {
-            if (!$this->isBotWatchingChannel($event->channel)) {
+            if (! $this->isBotBeholdingChannel($event->channel)) {
                 return;
             }
 

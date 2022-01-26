@@ -224,7 +224,7 @@ class Bot extends Client
         );
     }
 
-    protected function isBotMemberOfChannel($channel): bool
+    public function isBotMemberOfChannel($channel): bool
     {
         if (!$this->isChannel($channel)) {
             return false;
