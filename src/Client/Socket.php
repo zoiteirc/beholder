@@ -4,7 +4,7 @@ namespace App\Client;
 
 class Socket extends EventEmitter {
 
-    const DEFAULT_TIMEOUT = .3;
+    const DEFAULT_TIMEOUT = 5;
 
     protected $handle;
     protected $server;
