@@ -32,6 +32,8 @@ class Bot extends Client
 
         $this->config = $config;
 
+        $this->persistence->prepare();
+
         $this->setName($config->getUsername());
         $this->setRealName($config->getRealName());
 
