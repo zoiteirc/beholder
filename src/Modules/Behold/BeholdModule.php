@@ -144,6 +144,12 @@ class BeholdModule implements BotModule
                 unset($this->channels[$key]);
             }
         }
+
+        $this->lineStatsBuffer->purgeChannel($channel);
+        $this->textStatsBuffer->purgeChannel($channel);
+        $this->activeTimesBuffer->purgeChannel($channel);
+        $this->latestQuotesBuffer->purgeChannel($channel);
+        $this->monologueMonitor->purgeChannel($channel);
     }
 
     protected function registerIgnoreListControlListeners()

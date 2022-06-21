@@ -22,4 +22,10 @@ class MonologueMonitor
     {
         return $this->_lastspoke_count[$channel] == 5;
     }
+
+    public function purgeChannel($channel)
+    {
+        unset($this->_lastspoke_nick[$channel]);
+        unset($this->_lastspoke_count[$channel]);
+    }
 }

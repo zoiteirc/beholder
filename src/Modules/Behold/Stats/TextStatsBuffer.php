@@ -36,4 +36,11 @@ class TextStatsBuffer
     {
         return $str;
     }
+
+    public function purgeChannel($channel)
+    {
+        foreach (array_keys($this->_data) as $nick) {
+            unset($this->_data[$nick][$channel]);
+        }
+    }
 }

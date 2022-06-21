@@ -24,4 +24,11 @@ class ActiveTimeTotals
     {
         $this->_data = []; // Just empty the _data array - leaving 0 values will generate useless queries otherwise
     }
+
+    public function purgeChannel($channel)
+    {
+        foreach (array_keys($this->_data) as $nick) {
+            unset($this->_data[$nick][$channel]);
+        }
+    }
 }
