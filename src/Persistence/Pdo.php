@@ -131,7 +131,7 @@ abstract class Pdo
 
         if ($statement->rowCount() === 0) {
             // No entry, so we can assume the schema isn't set up.
-            $this->migrateSchema($connectionResource);
+            $this->migrateSchema($connectionResource, $schemaConfigKey);
             return;
         }
 
@@ -147,7 +147,7 @@ abstract class Pdo
         $actualSchemaVersion = $result['config_value'];
 
         if ($actualSchemaVersion < $expectedSchemaVersion) {
-            $this->migrateSchema($connectionResource, $actualSchemaVersion);
+            $this->migrateSchema($connectionResource, $schemaConfigKey, $actualSchemaVersion);
         }
 
         throw new PersistenceException(
@@ -162,7 +162,7 @@ abstract class Pdo
         return max(array_keys($this->getSchema()));
     }
 
-    protected function migrateSchema(\PDO $connectionResource, ?int $afterSchemaVersion = null)
+    protected function migrateSchema(\PDO $connectionResource, string $subSchemaName, ?int $afterSchemaVersion = null)
     {
         $currentSchemaVersion = null;
         foreach ($this->getSchema() as $schemaVersion => $schemaCommands) {
@@ -190,7 +190,7 @@ abstract class Pdo
         );
 
         $params = [
-            'key' => 'quotes_schema_version',
+            'key' => $subSchemaName,
             'value' => $currentSchemaVersion,
         ];
 
