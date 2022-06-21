@@ -82,7 +82,7 @@ abstract class Pdo
 
     protected function checkSchema(\PDO $connectionResource, $schemaConfigKey)
     {
-        $result = $connectionResource->query('SHOW TABLES LIKE "config"');
+        $result = $connectionResource->query('SHOW TABLES LIKE "core_config"');
 
         if (false === $result) {
             throw new PdoPersistenceException($connectionResource);
@@ -123,17 +123,17 @@ abstract class Pdo
             'key' => $schemaConfigKey,
         ]);
 
-        if (!$result) {
+        if (false === $statement) {
             throw new PdoPersistenceException($connectionResource);
         }
 
-        if ($result->rowCount() === 0) {
+        if ($statement->rowCount() === 0) {
             // No entry, so we can assume the schema isn't set up.
             $this->migrateSchema($connectionResource);
             return;
         }
 
-        $result = $result->fetch(\PDO::FETCH_ASSOC);
+        $result = $statement->fetch(\PDO::FETCH_ASSOC);
 
         $expectedSchemaVersion = $this->getLatestSchemaVersion();
 
