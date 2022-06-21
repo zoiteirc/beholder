@@ -1475,7 +1475,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "ext-mysqli": "*",
         "ext-pdo": "*"
     },
     "platform-dev": [],
