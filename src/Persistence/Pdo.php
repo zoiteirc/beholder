@@ -36,12 +36,14 @@ abstract class Pdo
         $connectionResource->beginTransaction();
 
         try {
-            $fn($connectionResource);
+            $result = $fn($connectionResource);
             $connectionResource->commit();
         } catch (\Exception $exception) {
             $connectionResource->rollback();
             throw $exception;
         }
+
+        return $result;
     }
 
     /**
