@@ -5,6 +5,7 @@ namespace App\Client;
 use App\ConfigurationInterface;
 use App\Modules\Behold\BeholdModule;
 use App\Modules\CommandList\CommandListModule;
+use App\Modules\Lottery\LotteryModule;
 use App\Modules\Quotes\Persistence\MySQL;
 use App\Modules\Quotes\QuotesModule;
 use App\Modules\SimpleCommands\SimpleCommandsModule;
@@ -71,7 +72,17 @@ class Bot extends Client
                     'password' => 'appsecret',
                     'database' => 'app',
                 ])
-            )
+            ),
+            new LotteryModule(
+                $this,
+                $config,
+                new \App\Modules\Lottery\Persistence\MySQL([
+                    'hostname' => 'db',
+                    'username' => 'appuser',
+                    'password' => 'appsecret',
+                    'database' => 'app',
+                ])
+            ),
         ];
 
         $this->mapModules(function ($module) {
