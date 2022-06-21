@@ -46,20 +46,72 @@ class MySQL extends Base implements PersistenceInterface
     protected function fetchChannelsFromDatabase()
     {
         return $this->withDatabaseConnection(function (PDO $connectionResource) {
-            $channels = [];
+            return $this->fetchChannels($connectionResource);
+        });
+    }
 
-            $result = $connectionResource
-                ->query('SELECT `id`, `channel` FROM `core_channels`');
+    protected function fetchChannels(PDO $connectionResource)
+    {
+        $channels = [];
 
-            if (false === $result) {
-                throw new PdoPersistenceException($connectionResource);
+        $result = $connectionResource
+            ->query('SELECT `id`, `channel` FROM `core_channels`');
+
+        if (false === $result) {
+            throw new PdoPersistenceException($connectionResource);
+        }
+
+        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+            $channels[(int)$row['id']] = strtolower($row['channel']);
+        }
+
+        return $channels;
+    }
+
+    public function addChannel(string $channelName) : array
+    {
+        return $this->withDatabaseConnection(function (PDO $connectionResource) use ($channelName) {
+            $statement = $connectionResource
+                ->prepare(
+                    <<< EOD
+                    INSERT INTO `core_channels`
+                    SET `channel` = :channel_name, `created_at` = :now, `updated_at` = :now
+                    EOD
+                );
+
+            $statement->bindValue('channel_name', $channelName);
+            $statement->bindValue('now', time());
+
+            try {
+                $statement->execute();
+            } catch (\Exception $exception) {
+                throw new PdoPersistenceException($connectionResource, $exception);
             }
 
-            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                $channels[(int)$row['id']] = strtolower($row['channel']);
+            return $this->fetchChannels($connectionResource);
+        });
+    }
+
+    public function removeChannel(string $channelName) : array
+    {
+        return $this->withDatabaseConnection(function (PDO $connectionResource) use ($channelName) {
+            $statement = $connectionResource
+                ->prepare(
+                    <<< EOD
+                    DELETE FROM `core_channels`
+                    WHERE `channel` = :channel_name
+                    EOD
+                );
+
+            $statement->bindValue('channel_name', $channelName);
+
+            try {
+                $statement->execute();
+            } catch (\Exception $exception) {
+                throw new PdoPersistenceException($connectionResource, $exception);
             }
 
-            return $channels;
+            return $this->fetchChannels($connectionResource);
         });
     }
 }

@@ -199,9 +199,9 @@ class Bot extends Client
 
         $this->pmBotAdmin('Joining ' . $channel);
 
-        $this->channels[] = $channel;
-
         $this->join($channel);
+
+        $this->channels = $this->persistence->addChannel($channel);
     }
 
     protected function tearDownChannel($channel)
@@ -213,15 +213,17 @@ class Bot extends Client
 
         $this->pmBotAdmin('Leaving ' . $channel);
 
+        $this->part($channel);
+
         $normalizedChannel = strtolower($channel);
 
-        foreach ($this->channels as $key => $activeChannel) {
+        foreach ($this->channels as $activeChannel) {
             if (strtolower($activeChannel) === $normalizedChannel) {
-                unset($this->channels[$key]);
+                $channelNameToRemove = $activeChannel;
             }
         }
 
-        $this->part($channel);
+        $this->channels = $this->persistence->removeChannel($channelNameToRemove);
     }
 
     public function pmBotAdmin($message)

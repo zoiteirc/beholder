@@ -9,4 +9,8 @@ interface PersistenceInterface
     public function prepare(): void;
 
     public function getChannels() : array;
+
+    public function addChannel(string $channelName) : array;
+
+    public function removeChannel(string $channelName) : array;
 }
