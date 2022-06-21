@@ -45,7 +45,7 @@ class CommandListModule implements BotModule
         );
 
         foreach ($commandExplanations as $commandExplanation) {
-            $this->bot->pm($nick, $commandExplanation);
+            $this->bot->notice($nick, $commandExplanation);
         }
     }
 }
