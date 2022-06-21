@@ -17,7 +17,7 @@ class RunBotCommand extends Command
     protected Bot $bot;
 
     public function __construct(
-        string $name = null,
+        ?string $name,
         Bot $bot
     )
     {
