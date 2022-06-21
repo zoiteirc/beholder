@@ -24,6 +24,8 @@ class EnvConfiguration implements ConfigurationInterface
 
     private string $commandPrefix;
 
+    private array $databaseCredentials;
+
     public function __construct(Dotenv $dotenv)
     {
         $dotenv->load('.env');
@@ -45,6 +47,13 @@ class EnvConfiguration implements ConfigurationInterface
         $this->debugMode = (bool) $_ENV['DEBUG'] ?? false;
 
         $this->commandPrefix = (string) $_ENV['COMMAND_PREFIX'] ?? '!';
+
+        $this->databaseCredentials = [
+            'hostname' => $_ENV['DB_HOST'] ?? 'db',
+            'username' => $_ENV['DB_USER'] ?? 'appuser',
+            'password' => $_ENV['DB_PASSWORD'] ?? 'appsecret',
+            'database' => $_ENV['DB_NAME'] ?? 'app',
+        ];
     }
 
     public function getDesiredNick(): string
@@ -115,5 +124,10 @@ class EnvConfiguration implements ConfigurationInterface
     public function getCommandPrefix(): string
     {
         return $this->commandPrefix;
+    }
+
+    public function getDatabaseCredentials(): array
+    {
+        return $this->databaseCredentials;
     }
 }

@@ -56,32 +56,17 @@ class Bot extends Client
             new QuotesModule(
                 $this,
                 $config,
-                new MySQL([
-                    'hostname' => 'db',
-                    'username' => 'appuser',
-                    'password' => 'appsecret',
-                    'database' => 'app',
-                ]),
+                new MySQL($config->getDatabaseCredentials()),
             ),
             new BeholdModule(
                 $this,
                 $config,
-                new \App\Modules\Behold\Persistence\MySQL([
-                    'hostname' => 'db',
-                    'username' => 'appuser',
-                    'password' => 'appsecret',
-                    'database' => 'app',
-                ])
+                new \App\Modules\Behold\Persistence\MySQL($config->getDatabaseCredentials())
             ),
             new LotteryModule(
                 $this,
                 $config,
-                new \App\Modules\Lottery\Persistence\MySQL([
-                    'hostname' => 'db',
-                    'username' => 'appuser',
-                    'password' => 'appsecret',
-                    'database' => 'app',
-                ])
+                new \App\Modules\Lottery\Persistence\MySQL($config->getDatabaseCredentials())
             ),
         ];
 

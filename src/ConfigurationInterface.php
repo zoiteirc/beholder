@@ -31,4 +31,6 @@ interface ConfigurationInterface
     public function isDebugMode(): bool;
 
     public function getCommandPrefix(): string;
+
+    public function getDatabaseCredentials(): array;
 }
