@@ -296,6 +296,10 @@ class BeholdModule implements BotModule
         });
 
         $this->bot->on('kick', function ($event) {
+            if (! $this->isBotBeholdingChannel($event->channel)) {
+                return;
+            }
+
             if (!$this->isIgnoredNick($event->victim, $event->channel)) {
                 $this->lineStatsBuffer->add($event->channel, $event->victim, StatsTotalsInterface::TYPE_KICK_VICTIM);
             }
@@ -305,6 +309,10 @@ class BeholdModule implements BotModule
         });
 
         $this->bot->on('join', function ($event) {
+            if (! $this->isBotBeholdingChannel($event->channel)) {
+                return;
+            }
+
             if ($this->isIgnoredNick($event->nick, $event->channel)) {
                 return;
             }
@@ -313,6 +321,10 @@ class BeholdModule implements BotModule
         });
 
         $this->bot->on('part', function ($event) {
+            if (! $this->isBotBeholdingChannel($event->channel)) {
+                return;
+            }
+
             if ($this->isIgnoredNick($event->nick, $event->channel)) {
                 return;
             }
@@ -321,6 +333,10 @@ class BeholdModule implements BotModule
         });
 
         $this->bot->on('mode', function ($event) {
+            if (! $this->isBotBeholdingChannel($event->channel)) {
+                return;
+            }
+
             if ($this->isIgnoredNick($event->nick, $event->channel)) {
                 return;
             }
