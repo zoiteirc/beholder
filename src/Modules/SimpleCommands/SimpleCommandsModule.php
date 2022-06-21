@@ -51,6 +51,11 @@ class SimpleCommandsModule implements BotModule, ExplainsCommands
         ];
     }
 
+    public function prepare()
+    {
+        // ...
+    }
+
     public function boot()
     {
         $this->bot->on('chat', function ($event) {

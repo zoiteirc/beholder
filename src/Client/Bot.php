@@ -75,6 +75,10 @@ class Bot extends Client
         ];
 
         $this->mapModules(function ($module) {
+            $module->prepare();
+        });
+
+        $this->mapModules(function ($module) {
             $module->boot();
         });
     }

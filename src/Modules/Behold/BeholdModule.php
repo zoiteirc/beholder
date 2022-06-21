@@ -44,6 +44,11 @@ class BeholdModule implements BotModule
         $this->persistence = $persistence;
     }
 
+    public function prepare()
+    {
+        $this->persistence->prepare();
+    }
+
     public function boot()
     {
         $this->initializeIgnoredNicks();

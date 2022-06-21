@@ -24,10 +24,13 @@ class QuotesModule implements BotModule, ExplainsCommands
         $this->persistence = $persistence;
     }
 
-    public function boot()
+    public function prepare()
     {
         $this->persistence->prepare();
+    }
 
+    public function boot()
+    {
         $this->bot->on('chat', function ($event) {
             $commandPrefix = $this->configuration->getCommandPrefix();
             if (strpos($event->text, $commandPrefix . 'quote') === 0) {

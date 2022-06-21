@@ -18,6 +18,11 @@ class CommandListModule implements BotModule
         $this->config = $config;
     }
 
+    public function prepare()
+    {
+        // ...
+    }
+
     public function boot()
     {
         $this->bot->on('chat', function ($event) {
