@@ -252,18 +252,6 @@ class MySQL extends Pdo implements PersistenceInterface
                     echo 'Writing to database (' . count($statements) . ' update' . (count($statements) === 1 ? '' : 's') . ')...';
                 }
 
-                // Record the time of the update
-                $statement = $connectionResource->prepare(
-                    <<< EOD
-                    UPDATE `beholder_config`
-                    SET `reporting_time` = :now
-                    EOD,
-                );
-
-                $statement->bindValue('now', time());
-
-                $statements[] = $statement;
-
                 $this->withTransaction(
                     $connectionResource,
                     function (\PDO $resourceConnection) use ($statements) {
