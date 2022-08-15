@@ -30,7 +30,7 @@ class MySQL extends Pdo implements PersistenceInterface
                   `normalized_nick` varchar(255) NOT NULL DEFAULT '',
                   `regular_nick` varchar(255) NOT NULL DEFAULT '',
                   PRIMARY KEY (`normalized_nick`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
                 <<< EOD
                 CREATE TABLE `behold_line_counts` (
@@ -39,7 +39,7 @@ class MySQL extends Pdo implements PersistenceInterface
                   `nick` varchar(255) NOT NULL DEFAULT '',
                   `total` int(11) NOT NULL DEFAULT '0',
                   PRIMARY KEY (`type`, `channel_id`,`nick`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
                 <<< EOD
                 CREATE TABLE `behold_active_times` (
@@ -48,7 +48,7 @@ class MySQL extends Pdo implements PersistenceInterface
                   `hour` tinyint(2) NOT NULL DEFAULT '0',
                   `total` int(11) NOT NULL DEFAULT '0',
                   PRIMARY KEY (`channel_id`,`nick`,`hour`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
                 <<< EOD
                 CREATE TABLE `behold_channels` (
@@ -57,20 +57,20 @@ class MySQL extends Pdo implements PersistenceInterface
                   `created_at` int NOT NULL,
                   `updated_at` int NOT NULL,
                   PRIMARY KEY (`id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
                 <<< EOD
                 CREATE TABLE `behold_ignored_nicks` (
                   `channel_id` int(11) NOT NULL DEFAULT '0',
                   `normalized_nick` varchar(255) NOT NULL DEFAULT '',
                   PRIMARY KEY (`normalized_nick`,`channel_id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
                 <<< EOD
                 CREATE TABLE `behold_ignored_nicks_global` (
                   `normalized_nick` varchar(255) NOT NULL DEFAULT '',
                   PRIMARY KEY (`normalized_nick`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
                 <<< EOD
                 CREATE TABLE `behold_latest_quote` (
@@ -78,7 +78,7 @@ class MySQL extends Pdo implements PersistenceInterface
                   `nick` varchar(255) NOT NULL DEFAULT '',
                   `quote` varchar(512) NOT NULL DEFAULT '',
                   PRIMARY KEY (`channel_id`,`nick`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
                 <<< EOD
                 CREATE TABLE `behold_textstats` (
@@ -90,7 +90,7 @@ class MySQL extends Pdo implements PersistenceInterface
                   `avg_words` decimal(5,2) NOT NULL DEFAULT '0.00',
                   `avg_chars` decimal(5,2) NOT NULL DEFAULT '0.00',
                   PRIMARY KEY (`channel_id`,`nick`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
             ],
         ];

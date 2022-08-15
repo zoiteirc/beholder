@@ -28,7 +28,7 @@ class MySQL extends Pdo implements PersistenceInterface
                   `id` INT NOT NULL AUTO_INCREMENT,
                   `content` varchar(400) NOT NULL,
                   PRIMARY KEY (`id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
             ],
         ];

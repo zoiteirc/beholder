@@ -28,7 +28,7 @@ class MySQL extends Base implements PersistenceInterface
                   `created_at` int NOT NULL,
                   `updated_at` int NOT NULL,
                   PRIMARY KEY (`id`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
             ],
         ];

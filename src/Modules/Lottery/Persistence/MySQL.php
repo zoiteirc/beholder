@@ -31,7 +31,7 @@ class MySQL extends Pdo implements PersistenceInterface
                   `nick` varchar(400) NOT NULL,
                   PRIMARY KEY (`id`),
                   UNIQUE KEY `unique_date_string_nick` (`date_string`, `nick`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD,
             ],
         ];

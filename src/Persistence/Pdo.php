@@ -103,7 +103,7 @@ abstract class Pdo
                     `config_value` VARCHAR(255) NOT NULL DEFAULT '',
                     PRIMARY KEY (`id`),
                     UNIQUE KEY(`config_key`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_bin;
                 EOD
             );
 
