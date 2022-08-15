@@ -63,11 +63,6 @@ class Bot extends Client
                 $config,
                 new \App\Modules\Behold\Persistence\MySQL($config->getDatabaseCredentials())
             ),
-            new LotteryModule(
-                $this,
-                $config,
-                new \App\Modules\Lottery\Persistence\MySQL($config->getDatabaseCredentials())
-            ),
         ];
 
         $this->mapModules(function ($module) {
