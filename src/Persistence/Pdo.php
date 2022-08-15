@@ -62,7 +62,7 @@ abstract class Pdo
 
             try {
                 $connectionResource = new \PDO(
-                    'mysql:dbname=' . $this->database . ';host=' . $this->hostname . ';charset=utf8',
+                    'mysql:dbname=' . $this->database . ';host=' . $this->hostname . ';charset=utf8mb4',
                     $this->username,
                     $this->password,
                 );
